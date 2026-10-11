@@ -346,11 +346,29 @@ function newGame(cfg){
 }
 
 function roundRobin(ids){
+  /* Kreismethode mit wechselndem Heimrecht: jeder Verein spielt abwechselnd zu Hause und auswärts, höchstens ein Doppel-Heim/Auswärts pro Runde */
   const n=ids.length,arr=shuffle(ids.slice()),rounds=[];
-  for(let r=0;r<n-1;r++){const md=[];for(let i=0;i<n/2;i++){let h=arr[i],a=arr[n-1-i];if((r+i)%2===1)[h,a]=[a,h];md.push([h,a])}rounds.push(md);arr.splice(1,0,arr.pop())}
-  shuffle(rounds);
+  for(let r=0;r<n-1;r++){const md=[];for(let i=0;i<n/2;i++){let h=arr[i],a=arr[n-1-i];if(r%2===1)[h,a]=[a,h];md.push([h,a])}rounds.push(md);arr.splice(1,0,arr.pop())}
   return rounds.concat(rounds.map(md=>md.map(([h,a])=>[a,h])));
 }
+/* Repariert Heim/Auswärts-Serien im laufenden Spielplan, ohne gespielte Partien oder Paarungen zu ändern:
+   Paarungen mit offenem Hin- und Rückspiel tauschen ggf. das Heimrecht, offene Spieltage die Reihenfolge (lokale Suche). */
+function fixVenueStreaks(lg){
+  const sc=S.sched[lg];if(!sc||sc.length!==34)return;
+  const pairs=[];for(let r=0;r<17;r++)for(const f of sc[r]){if(f.gh!=null)continue;const mf=sc[r+17].find(x=>x.h===f.a&&x.a===f.h);if(mf&&mf.gh==null)pairs.push([f,mf])}
+  const open=[];for(let r=0;r<34;r++)if(sc[r].every(f=>f.gh==null))open.push(r);
+  if(!pairs.length&&open.length<2)return;
+  const ids=leagueTeams(lg).map(t=>t.id);
+  const cost=()=>{let c=0;for(const id of ids){let run=0,last='';for(const md of sc){const f=md.find(x=>x.h===id||x.a===id);if(!f)continue;const v=f.h===id?'H':'A';run=v===last?run+1:1;last=v;if(run>=2)c+=(run-1)*(run-1)}}return c};
+  const flip=([f,mf])=>{const t=f.h;f.h=f.a;f.a=t;mf.h=f.a;mf.a=f.h};
+  let best=cost();
+  const swapR=(i,j)=>{const t=sc[i];sc[i]=sc[j];sc[j]=t};
+  for(let it=0;it<2500;it++){
+    if(open.length>=2&&(R()<.5||!pairs.length)){const i=open[Math.floor(R()*open.length)],j=open[Math.floor(R()*open.length)];if(i===j)continue;swapR(i,j);const c=cost();if(c<=best)best=c;else swapR(i,j)}
+    else{const p=pairs[Math.floor(R()*pairs.length)];flip(p);const c=cost();if(c<=best)best=c;else flip(p)}
+  }
+}
+function maxStreak(lg,id){let best=0,cur=0,last='';for(const md of S.sched[lg]){const f=md.find(x=>x.h===id||x.a===id);if(!f)continue;const v=f.h===id?'H':'A';cur=v===last?cur+1:1;last=v;best=Math.max(best,cur)}return best}
 function boardTarget(t){
   const lg=leagueTeams(t.league).sort((a,b)=>teamRating(b)-teamRating(a));const rank=lg.indexOf(t)+1;
   if(t.league===1)return rank<=2?2:rank<=5?4:rank<=9?8:rank<=13?12:15;
@@ -378,6 +396,7 @@ function genYouth(t){
 }
 function startSeason(first){
   for(const lg of [1,2]){const ids=leagueTeams(lg).map(t=>t.id);S.sched[lg]=roundRobin(ids).map(md=>md.map(([h,a])=>({h,a,gh:null,ga:null})))}
+  S.schedV=2;
   const l1=leagueTeams(1).map(t=>t.id);
   const l2=leagueTeams(2).sort((a,b)=>teamRating(b)-teamRating(a)).slice(0,14).map(t=>t.id);
   S.cup={alive:l1.concat(l2),rounds:[],winner:null};drawCup(S.cup,0,'POK');
@@ -779,6 +798,7 @@ function settleToto(hi,t,wk){
   addNews(hi,'Toto-Ergebnis',`${ok} von 11 richtig.${win?' Gewinn: '+money(win)+'!':' Leider kein Gewinn.'}`,{kind:win?'good':'info'});t.toto=null;
 }
 function migrate(){
+  if(S.schedV!==2){for(const lg of [1,2])fixVenueStreaks(lg);S.schedV=2}
   if(!S.market)S.market=initMarket();if(S.settings.scenes==null)S.settings.scenes=true;
   for(const p of Object.values(S.players))ensureP(p);
   for(const t of S.teams){if(t.bonus==null)t.bonus=0;if(t.merch==null)t.merch=1;if(t.loan==null)t.loan=0;if(t.depo==null)t.depo=0;if(!t.stocks)t.stocks={};if(!t.props)t.props=[];if(t.human>=0)ensureSlots(t);for(const k of ['catering','merch','finance'])if(t.fin.in[k]==null)t.fin.in[k]=0;for(const k of ['bonus','merch','finance'])if(t.fin.out[k]==null)t.fin.out[k]=0}
