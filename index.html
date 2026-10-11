@@ -157,14 +157,15 @@ tr.zone-down td:first-child{box-shadow:inset 4px 0 var(--bad)}
 .floods i{width:46px;height:20px;background:repeating-linear-gradient(90deg,var(--hi) 0 6px,var(--deep) 6px 8px);border:2px solid var(--ink);box-shadow:0 0 22px rgba(255,216,74,.45)}
 .ngrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));gap:10px;padding:10px 0;border-top:1px solid rgba(70,96,207,.4)}
 label{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:600;color:var(--dim)}
-.pitch{position:relative;width:min(100%,440px);aspect-ratio:68/100;margin:0 auto;background:repeating-linear-gradient(0deg,#1f7a3a 0 8%,#25893f 8% 16%);border:3px solid #e9eeff;touch-action:none;overflow:hidden;user-select:none;-webkit-user-select:none}
+.pitch{position:relative;width:min(100%,440px);aspect-ratio:68/100;margin:0 auto;background:repeating-linear-gradient(0deg,#1f7a3a 0 8%,#25893f 8% 16%);border:3px solid #e9eeff;touch-action:pan-y;overflow:hidden;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .pitch .pl{position:absolute;border:2px solid rgba(233,238,255,.75);pointer-events:none}
 .pitch .half{left:0;right:0;top:50%;height:0;border-width:2px 0 0}
 .pitch .circ{left:50%;top:50%;width:24%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%}
 .pitch .box1{left:22%;right:22%;top:-2px;height:15%}.pitch .box2{left:22%;right:22%;bottom:-2px;height:15%}
 .pitch .zone{position:absolute;left:4px;font-family:var(--f-disp);font-size:15px;color:rgba(233,238,255,.4);pointer-events:none}
 .pitch .z1{top:4%}.pitch .z2{top:36%}.pitch .z3{top:62%}
-.tok{position:absolute;transform:translate(-50%,-50%);width:64px;min-height:44px;display:flex;flex-direction:column;align-items:center;gap:0;background:var(--ink);color:var(--fg);border:2px solid var(--bevl);padding:2px 2px 4px;cursor:grab;font-size:11px;line-height:1.15;touch-action:none}
+.tok{position:absolute;transform:translate(-50%,-50%);width:64px;min-height:44px;display:flex;flex-direction:column;align-items:center;gap:0;background:var(--ink);color:var(--fg);border:2px solid var(--bevl);padding:2px 2px 4px;cursor:grab;font-size:11px;line-height:1.15;touch-action:pan-y;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;transition:transform .12s}
+.tok.lift{transform:translate(-50%,-50%) scale(1.15);border-color:var(--hi);box-shadow:0 6px 14px rgba(0,0,0,.55);z-index:5;cursor:grabbing}
 .tok i{font-style:normal;font-size:10px;min-width:22px;padding:0 2px}.tok b{font-size:11.5px;max-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.tok span{font-size:10px;color:var(--dim)}
 .tok em{position:absolute;left:0;bottom:0;height:3px;background:var(--good)}
 .tok.sel{border-color:var(--hi);box-shadow:0 0 0 3px var(--hi)}.tok.off{border-color:var(--warn)}.tok.off span{color:var(--warn)}.tok.bad{opacity:.55}
@@ -1372,7 +1373,7 @@ function viewLineup(){
    <div class="row" style="margin-bottom:8px"><div class="seg">${Object.keys(FORMS).map(f=>`<button data-act="lineupForm" data-f="${f}" class="${f===t.tactic.form?'on':''}">${f}</button>`).join('')}</div></div>
    <div class="row" style="margin-bottom:10px"><button class="btn sm" data-act="autoXI">Beste Elf</button><button class="btn sm" data-act="slotsReset">Positionen zurücksetzen</button><span class="small dim">Abw ${st.def.toFixed(1)} · Mit ${st.mid.toFixed(1)} · Ang ${st.att.toFixed(1)}</span></div>
    <div class="pitch" id="pitch"><div class="pl half"></div><div class="pl circ"></div><div class="pl box1"></div><div class="pl box2"></div><div class="zone z1">Sturm</div><div class="zone z2">Mittelfeld</div><div class="zone z3">Abwehr</div>${tokens}</div>
-   <p class="small dim" style="margin:8px 0 0">Spieler ziehen, um die Position frei zu verändern. Die Zone (Sturm, Mittelfeld, Abwehr, Tor) bestimmt die Rolle. Antippen und dann einen zweiten Spieler oder einen von der Bank antippen tauscht beide.${offCnt?` <span class="warn">${offCnt} Spieler auf fremder Position spielen schwächer.</span>`:''}</p>
+   <p class="small dim" style="margin:8px 0 0">Spieler kurz gedrückt halten und ziehen, um die Position frei zu verändern. Wischen scrollt die Seite. Die Zone (Sturm, Mittelfeld, Abwehr, Tor) bestimmt die Rolle. Antippen und dann einen zweiten Spieler oder einen von der Bank antippen tauscht beide.${offCnt?` <span class="warn">${offCnt} Spieler auf fremder Position spielen schwächer.</span>`:''}</p>
   </div></div>
   <div class="panel"><h2>Bank & Tribüne <small>${bench.length} Spieler</small></h2><div class="bd"><div class="fxl">${bench.map(p=>`<button class="benchp${selB===p.id?' sel':''}" data-act="benchSel" data-id="${p.id}"${avail(p)?'':' disabled'}><span>${posChip(p)} ${esc(p.n)} ${statusTags(p)}</span><span class="small">${p.str} · Form ${p.form.toFixed(1)} ${formTrend(p)}</span>${meter(p.fit)}</button>`).join('')}</div>
    <p class="small dim">${sel!=null?'Jetzt einen Bankspieler antippen, um ihn auf die markierte Position zu stellen.':selB!=null?'Jetzt eine Position auf dem Platz antippen.':'Bankspieler antippen und dann eine Position auf dem Platz wählen.'}</p></div></div></div>`;
@@ -1387,14 +1388,25 @@ function lineupTap(i){
 }
 function benchTap(id){const t=curTeam();if(UI.lsel!=null){t.lineup[UI.lsel]=id;UI.lsel=null;UI.lselB=null}else UI.lselB=UI.lselB===id?null:id;render()}
 let DRAG=null;
+/* Touch: Scrollen bleibt frei; Ziehen erst nach kurzem Gedrückthalten (Long-Press). Maus: sofort ziehen. */
 function lineupPointer(){
-  document.addEventListener('pointerdown',e=>{const tok=e.target.closest('[data-tok]');if(!tok)return;const pitch=document.getElementById('pitch');if(!pitch)return;
-    DRAG={i:+tok.dataset.tok,el:tok,x0:e.clientX,y0:e.clientY,moved:false,rect:pitch.getBoundingClientRect()};tok.setPointerCapture&&tok.setPointerCapture(e.pointerId)});
-  document.addEventListener('pointermove',e=>{if(!DRAG)return;const dx=e.clientX-DRAG.x0,dy=e.clientY-DRAG.y0;if(!DRAG.moved&&Math.hypot(dx,dy)<6)return;DRAG.moved=true;e.preventDefault();
-    const r=DRAG.rect;const px=clamp((e.clientX-r.left)/r.width*100,5,95),py=clamp((e.clientY-r.top)/r.height*100,5,96);DRAG.el.style.left=px+'%';DRAG.el.style.top=py+'%';DRAG.px=px;DRAG.py=py},{passive:false});
-  document.addEventListener('pointerup',()=>{if(!DRAG)return;const d=DRAG;DRAG=null;const t=curTeam();if(!t)return;
-    if(d.moved&&d.px!=null){ensureSlots(t);t.slots[d.i]={x:Math.round(d.px),y:Math.round(d.py)};render()}else lineupTap(d.i)});
-  document.addEventListener('pointercancel',()=>{DRAG=null});
+  const start=(tok,x,y,touch)=>{const pitch=document.getElementById('pitch');if(!pitch)return;
+    DRAG={i:+tok.dataset.tok,el:tok,x0:x,y0:y,t0:Date.now(),moved:false,drag:!touch,rect:pitch.getBoundingClientRect(),touch};
+    if(touch)DRAG.timer=setTimeout(()=>{if(DRAG&&!DRAG.moved){DRAG.drag=true;DRAG.rect=pitch.getBoundingClientRect();tok.classList.add('lift')}},230)};
+  const move=(x,y,ev)=>{if(!DRAG)return;const dx=x-DRAG.x0,dy=y-DRAG.y0;
+    if(!DRAG.drag){if(Math.hypot(dx,dy)>8){DRAG.moved=true;clearTimeout(DRAG.timer);if(DRAG.touch)DRAG=null;else DRAG.drag=true}if(!DRAG||!DRAG.drag)return}
+    if(ev&&ev.cancelable)ev.preventDefault();DRAG.moved=true;
+    const r=DRAG.rect;const px=clamp((x-r.left)/r.width*100,5,95),py=clamp((y-r.top)/r.height*100,5,96);DRAG.el.style.left=px+'%';DRAG.el.style.top=py+'%';DRAG.px=px;DRAG.py=py};
+  const end=()=>{if(!DRAG)return;const d=DRAG;DRAG=null;clearTimeout(d.timer);d.el.classList.remove('lift');const t=curTeam();if(!t)return;
+    if(d.drag&&d.px!=null){ensureSlots(t);t.slots[d.i]={x:Math.round(d.px),y:Math.round(d.py)};render()}
+    else if(!d.moved&&Date.now()-d.t0<450)lineupTap(d.i)};
+  document.addEventListener('touchstart',e=>{const tok=e.target.closest('[data-tok]');if(!tok||e.touches.length>1)return;const p=e.touches[0];start(tok,p.clientX,p.clientY,true)},{passive:true});
+  document.addEventListener('touchmove',e=>{if(!DRAG)return;const p=e.touches[0];move(p.clientX,p.clientY,e)},{passive:false});
+  document.addEventListener('touchend',e=>{if(DRAG){if(DRAG.drag||(!DRAG.moved))e.preventDefault();end()}},{passive:false});
+  document.addEventListener('touchcancel',()=>{if(DRAG){clearTimeout(DRAG.timer);DRAG.el.classList.remove('lift');DRAG=null}});
+  document.addEventListener('mousedown',e=>{const tok=e.target.closest('[data-tok]');if(!tok||e.button!==0)return;e.preventDefault();start(tok,e.clientX,e.clientY,false);DRAG.drag=false});
+  document.addEventListener('mousemove',e=>{if(DRAG&&!DRAG.touch)move(e.clientX,e.clientY,e)});
+  document.addEventListener('mouseup',()=>{if(DRAG&&!DRAG.touch)end()});
 }
 /* ---------- Bank ---------- */
 function viewBank(){
