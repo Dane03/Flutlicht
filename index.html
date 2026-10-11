@@ -214,7 +214,17 @@ const SPONSORS=['Hopfengold Brauerei','Wendt Autohaus','Nordlicht Versicherung',
 const POS=['TW','AB','MF','ST'];
 const POSN={TW:'Torwart',AB:'Abwehr',MF:'Mittelfeld',ST:'Sturm'};
 const FORMS={'4-4-2':{TW:1,AB:4,MF:4,ST:2},'4-3-3':{TW:1,AB:4,MF:3,ST:3},'3-5-2':{TW:1,AB:3,MF:5,ST:2},'5-3-2':{TW:1,AB:5,MF:3,ST:2},'4-5-1':{TW:1,AB:4,MF:5,ST:1},'3-4-3':{TW:1,AB:3,MF:4,ST:3}};
-const STYLES={def:'Defensiv',norm:'Ausgewogen',off:'Offensiv'};
+const STYLES={def:'Defensiv',norm:'Ausgewogen',off:'Offensiv',allin:'Alles nach vorne',bus:'Mauern'};
+const DERBY_SHORT=[['BVB','Schalke'],['BVB','Bochum'],['Schalke','Bochum'],['Bochum','Duisburg'],['Schalke','Duisburg'],['BVB','Duisburg'],['Bochum','Wattenscheid'],['Bayern','1860'],['Bayern','Nürnberg'],['1860','Nürnberg'],['HSV','St. Pauli'],['HSV','Bremen'],['Köln','Gladbach'],['Köln','Leverkusen'],['Köln','Fortuna Köln'],['Gladbach','Leverkusen'],['Gladbach','Uerdingen'],['Uerdingen','Düsseldorf'],['Köln','Düsseldorf'],['Frankfurt','FSV'],['KSC','Stuttgart'],['KSC','Freiburg'],['KSC','Waldhof'],['Freiburg','Stuttgart'],['Lautern','Saarbrücken'],['Lautern','Homburg'],['Saarbrücken','Homburg'],['Lautern','Mainz'],['Lautern','Waldhof'],['Dresden','Leipzig'],['Dresden','Chemnitz'],['Chemnitz','Zwickau'],['Leipzig','Chemnitz'],['Hannover','Wolfsburg'],['Hannover','Bremen'],['Rostock','St. Pauli']];
+let DERBYSET=null;
+function isDerby(a,b){if(!DERBYSET){DERBYSET=new Set();const idx=sh=>CLUBS.findIndex(c=>c[1]===sh)+1;for(const [x,y] of DERBY_SHORT){const i=idx(x),j=idx(y);if(i&&j){DERBYSET.add(i+'-'+j);DERBYSET.add(j+'-'+i)}}}return DERBYSET.has(a+'-'+b)}
+const WX={sonnig:{l:'sonnig',i:'☀',lam:1,fat:1,inj:1},wolkig:{l:'bewölkt',i:'☁',lam:1,fat:1,inj:1},regen:{l:'Regen',i:'☂',lam:.95,fat:1.05,inj:1.25},hitze:{l:'Hitze',i:'☀',lam:1,fat:1.45,inj:1},schnee:{l:'Schnee',i:'❄',lam:.88,fat:1.15,inj:1.3},frost:{l:'Frost',i:'❄',lam:.92,fat:1.1,inj:1.4},sturm:{l:'Sturm',i:'≋',lam:.9,fat:1.1,inj:1}};
+function wxFor(w){const h=hashN(S.year*100+w,11);if(w>=16&&w<=22)return h<.3?'schnee':h<.45?'frost':h<.7?'regen':'wolkig';if(w<=4||w>=31)return h<.25?'hitze':h<.65?'sonnig':h<.8?'regen':'wolkig';return h<.3?'sonnig':h<.65?'wolkig':h<.95?'regen':'sturm'}
+const CHAR={fuehrung:'Führungsspieler',diva:'Diva',fleiss:'Trainingsweltmeister',skandal:'Skandalnudel'};
+const CHAR_REAL={'Lothar Matthäus':'fuehrung','Matthias Sammer':'fuehrung','Thomas Helmer':'fuehrung','Andreas Brehme':'fuehrung','Olaf Thon':'fuehrung','Rudi Völler':'fuehrung','Stefan Kuntz':'fuehrung','Dieter Eilts':'fuehrung','Andreas Köpke':'fuehrung','Bodo Illgner':'fuehrung'};
+const INJ=[['Prellung',30,2,2],['Zerrung',25,2,3],['Bänderdehnung',15,3,4],['Muskelfaserriss',14,3,6],['Meniskusverletzung',8,6,10],['Kreuzbandriss',4,22,30],['Knochenbruch',4,8,12]];
+function windowOpen(w){w=w??S.week;return w<=4||(w>=17&&w<=19)}
+function windowText(){return windowOpen()?(S.week===4||S.week===19?'Deadline-Day! Letzte Woche des Transferfensters.':`Transferfenster offen bis zum ${S.week<=4?4:19}. Spieltag.`):`Transferfenster geschlossen, öffnet ${S.week<17?'zum 17. Spieltag':'im Sommer'}. Vereinslose Spieler gehen immer.`}
 const CUP_WEEKS=[3,10,17,24,31], EUR_WEEKS=[6,13,21,29];
 const CUP_NAMES=['1. Runde','Achtelfinale','Viertelfinale','Halbfinale','Finale'];
 const EUR_NAMES=['Achtelfinale','Viertelfinale','Halbfinale','Finale'];
@@ -255,14 +265,14 @@ const leagueTeams=lg=>S.teams.filter(t=>!t.foreign&&t.league===lg);
 function genName(nat){return nat==='D'?pick(FIRST)+' '+pick(LAST):pick(FFIRST)+' '+pick(FLAST)}
 function pValue(p){const base=Math.max(25,Math.pow(Math.max(p.str-30,1),2.2)*1.2);const a=p.age;const f=a<=21?1.4:a<=24?1.2:a<=28?1:a<=30?.75:a<=32?.5:.3;const pb=a<24?1+(p.pot-p.str)/60:1;return Math.round(base*f*pb/5)*5}
 function pSalary(p){return Math.round((pValue(p)*.16+40)/5)*5}
-function effStr(p){return p.str*(.72+.28*p.fit/100)*(1+(p.form-5)*.012)}
+function effStr(p){return p.str*(.72+.28*p.fit/100)*(1+(p.form-5)*.012)*(.95+(p.mood??70)*.0008)}
 const SK=['TEC','TMP','SCH','KOP','ZWK','PAS','TWR'];
 const SKN={TEC:'Technik',TMP:'Tempo',SCH:'Schuss',KOP:'Kopfball',ZWK:'Zweikampf',PAS:'Passspiel',TWR:'Torwartspiel'};
 const SKW={TW:{TWR:.7,KOP:.1,PAS:.1,TMP:.1},AB:{ZWK:.35,KOP:.25,TMP:.2,PAS:.1,TEC:.1},MF:{PAS:.3,TEC:.25,TMP:.15,ZWK:.15,SCH:.15},ST:{SCH:.35,TEC:.2,TMP:.2,KOP:.2,PAS:.05}};
 function calcStr(p){const w=SKW[p.pos];let v=0;for(const k in w)v+=w[k]*p.sk[k];return Math.round(v)}
 function mkSkills(p){const w=SKW[p.pos];p.sk={};for(const k of SK){const rel=w[k]?0:(k==='TWR'?-45:p.pos==='TW'?-22:-10);p.sk[k]=clamp(Math.round(p.str+rel+rnd(-10,10)),5,99)}syncSkills(p)}
 function syncSkills(p){if(!p.sk)return mkSkills(p);const w=SKW[p.pos];for(let i=0;i<4;i++){const d=p.str-calcStr(p);if(!d)break;for(const k in w)p.sk[k]=clamp(p.sk[k]+d,5,99)}}
-function ensureP(p){if(!p.sk)mkSkills(p);if(!p.fh)p.fh=[];if(p.s0==null)p.s0=p.str}
+function ensureP(p){if(!p.sk)mkSkills(p);if(!p.fh)p.fh=[];if(p.s0==null)p.s0=p.str;if(p.ch===undefined){const h=hashN(p.id,7);p.ch=CHAR_REAL[p.n]||(h<.07?'fuehrung':h<.15?'diva':h<.25?'fleiss':h<.31?'skandal':'')}if(p.mood==null)p.mood=70;if(p.risk==null)p.risk=0}
 const CORE={TW:'TWR',AB:'ZWK',MF:'PAS',ST:'SCH'};
 /* Co-Trainer-Einschätzung: eigene Spieler genauer, fremde und Talente unschärfer; pro Spieler stabil */
 function hashN(id,k){let x=Math.imul((id|0)+k*7919,2654435761)>>>0;x=(x^(x>>>15))>>>0;x=Math.imul(x,2246822519)>>>0;x=(x^(x>>>13))>>>0;return (x%10000)/10000}
@@ -291,7 +301,7 @@ function teamStr(on,style,hart,roles,mot){
     if(ro==='TW'){if(!twN){tw=e;twN=1}else ab+=e*.5}else if(ro==='AB')ab+=e;else if(ro==='MF')mf+=e;else st+=e}
   if(!twN)tw=22;
   let def=(ab+mf*.3+tw*1.5)/6.7, mid=(mf+ab*.25+st*.25)/5.5, att=(st+mf*.35)/3.4;
-  if(style==='off'){att*=1.08;def*=.93}else if(style==='def'){att*=.92;def*=1.08}
+  if(style==='off'){att*=1.08;def*=.93}else if(style==='def'){att*=.92;def*=1.08}else if(style==='allin'){att*=1.18;def*=.82;mid*=1.03}else if(style==='bus'){att*=.72;def*=1.16;mid*=.95}
   if(hart){att*=1.02;def*=1.03;mid*=1.02}
   return {def:Math.max(def,10),mid:Math.max(mid,10),att:Math.max(att,10)};
 }
@@ -460,7 +470,9 @@ function makeMatch(hid,aid,comp,fx,o={}){
   const H=team(hid),A=team(aid);
   const m={hid,aid,comp,fx,ko:!!o.ko,neutral:!!o.neutral,gh:0,ga:0,min:0,end:90,done:false,ev:[],on:[[],[]],gone:[new Set(),new Set()],played:[new Set(),new Set()],used:[0,0],yc:new Set(),str:[null,null],style:[H.tactic.style,A.tactic.style],hart:[H.tactic.hart,A.tactic.hart],pen:null,att:0,lastGoal:-9};
   const LH=lineupWithRoles(H),LA=lineupWithRoles(A);m.on[0]=LH.ids;m.on[1]=LA.ids;m.role=[LH.roles,LA.roles];
-  m.mot=[1+Math.min(.04,(H.bonus||0)*.002),1+Math.min(.04,(A.bonus||0)*.002)];
+  m.wx=wxFor(S.week);m.derby=!H.foreign&&!A.foreign&&isDerby(hid,aid);m.interactive=false;m.pend=null;m.asked=[{},{}];
+  const mot=(t,ids,opp)=>{let v=1+Math.min(.04,(t.bonus||0)*.002);if(m.derby)v+=.03;const ps=ids.map(P);v+=Math.min(.03,ps.filter(p=>p.ch==='fuehrung').length*.015);if(t.cap&&ids.includes(t.cap))v+=P(t.cap)&&P(t.cap).ch==='fuehrung'?.025:.015;if(t.press&&t.press.wk===S.week&&t.press.opp===opp)v+=t.press.k==='hot'?.02:t.press.k==='bold'?.01:0;return v};
+  m.mot=[mot(H,m.on[0],aid),mot(A,m.on[1],hid)];
   m.on.forEach((on,s)=>on.forEach(id=>m.played[s].add(id)));
   const rh=teamRating(H),ra=teamRating(A);
   if(H.human<0)m.style[0]=rh-ra>6?'off':ra-rh>6?'def':'norm';
@@ -483,7 +495,8 @@ function autoReplace(m,s,pos,outName){
 }
 function simMinute(m){
   if(m.done)return;
-  m.min++;
+  if(m.pend){if(m.interactive)return;autoResolve(m)}
+  m.min++;const W=WX[m.wx||'sonnig'];
   const et=m.min>90?.85:1;
   const H=team(m.hid);
   for(let s=0;s<2;s++){
@@ -491,13 +504,17 @@ function simMinute(m){
     const me=m.str[s],op=m.str[1-s];
     let lam=1.28*Math.pow(me.att/op.def,1.7)*Math.pow(me.mid/op.mid,.6);
     if(!m.neutral)lam*=s===0?1.12:.92;
-    lam=clamp(lam,.12,5.5);
-    if(s===0||s===1){const tf=(m.hart[s]?1.15:1)*(m.min>90?1.25:1);for(const id of m.on[s]){const p=P(id);p.fit=Math.max(8,p.fit-.15*tf*(p.age>=31?1.12:1)*(p.pos==='TW'?.4:1))}if(m.min%10===0)m.str[s]=null}
+    lam=clamp(lam*W.lam,.12,5.5);
+    if(s===0||s===1){const tf=(m.hart[s]?1.15:1)*(m.min>90?1.25:1)*W.fat;for(const id of m.on[s]){const p=P(id);p.fit=Math.max(8,p.fit-.15*tf*(p.age>=31?1.12:1)*(p.pos==='TW'?.4:1))}if(m.min%10===0)m.str[s]=null}
     if(R()<lam/90*et)goal(m,s);else if(R()<lam/90*1.5)chanceEv(m,s);
-    if(R()<(m.hart[s]?.03:.021))card(m,s,false);
-    if(R()<(m.hart[s]?.0018:.0011))card(m,s,true);
-    const ip=.0016*(s===0&&!m.neutral&&H.stadium.heiz?.6:1);
+    const dk=m.derby?1.4:1;
+    if(R()<(m.hart[s]?.03:.021)*dk)card(m,s,false);
+    if(R()<(m.hart[s]?.0018:.0011)*dk)card(m,s,true);
+    if(m.pend)continue;
+    const ip=.0016*W.inj*(s===0&&!m.neutral&&H.stadium.heiz?.6:1);
     if(R()<ip)injury(m,s);
+    else{const rk=m.on[s].find(id=>P(id).risk>0&&R()<.003);if(rk)injury(m,s,rk)}
+    if(!m.pend&&R()<.0018)penaltyEv(m,s);
     const t=team(s?m.aid:m.hid);
     if(t.human<0&&(m.min===62||m.min===76)&&m.used[s]<3){
       const tired=m.on[s].map(P).filter(p=>p.pos!=='TW').sort((a,b)=>a.fit-b.fit)[0];
@@ -514,14 +531,22 @@ function chanceEv(m,s){const on=m.on[s].map(P).filter(p=>p.pos!=='TW');if(!on.le
 function goal(m,s){
   const on=m.on[s].map(P);if(!on.length)return;
   const p=wpick(on,on.map(p=>{const ro=(m.role&&m.role[s][p.id])||p.pos;ensureP(p);return ({TW:.02,AB:.7,MF:2.4,ST:6}[ro])*((p.sk.SCH*.6+p.sk.KOP*.4)/70)}));
-  if(s)m.ga++;else m.gh++;m.lastGoal=m.min;addEv(m,s,'goal',p,{sc:`${m.gh}:${m.ga}`});
+  scoreGoal(m,s,p);
 }
+function scoreGoal(m,s,p,x){if(s)m.ga++;else m.gh++;m.lastGoal=m.min;addEv(m,s,'goal',p,Object.assign({sc:`${m.gh}:${m.ga}`},x||{}))}
+function bestShooters(m,s){return m.on[s].map(P).filter(p=>p.pos!=='TW').sort((a,b)=>(b.sk.SCH+b.form*2)-(a.sk.SCH+a.form*2))}
+function penaltyEv(m,s){addEv(m,s,'info',null,{txt:`Elfmeter für ${team(s?m.aid:m.hid).short}!`});const t=team(s?m.aid:m.hid);
+  if(m.interactive&&t.human>=0){m.pend={k:'pen',s};return}const b=bestShooters(m,s)[0];if(b)takePenalty(m,s,b.id)}
+function takePenalty(m,s,pid){const p=P(pid);ensureP(p);const kid=m.on[1-s].find(id=>(m.role[1-s][id]||P(id).pos)==='TW');const k=kid?P(kid):null;
+  const pr=clamp(.72+(p.sk.SCH-70)*.006-(k?(k.sk.TWR-70)*.004:-.1)+(p.form-5)*.01,.45,.93);
+  if(R()<pr)scoreGoal(m,s,p,{pen:1});else addEv(m,s,'chance',p,{txt:R()<.6&&k?`Elfmeter! ${k.n} hält gegen ${p.n}`:`Elfmeter verschossen: ${p.n}`})}
+function autoResolve(m){const d=m.pend;m.pend=null;if(!d)return;if(d.k==='pen'){const b=bestShooters(m,d.s)[0];if(b)takePenalty(m,d.s,b.id)}else if(d.k==='inj')autoReplace(m,d.s,d.role,d.name)}
 function card(m,s,red){
   const on=m.on[s].map(P);if(!on.length)return;
   const p=wpick(on,on.map(p=>({TW:.3,AB:3,MF:2,ST:1.4}[p.pos])));
   let gr=false;if(!red&&m.yc.has(p.id)){red=true;gr=true}
   if(red){m.on[s]=m.on[s].filter(i=>i!==p.id);m.gone[s].add(p.id);m.str[s]=null;addEv(m,s,'red',p,{gr});
-    if(p.pos==='TW'){const t=team(s?m.aid:m.hid);if(t.human<0||true)autoKeeper(m,s)}}
+    if(p.pos==='TW')autoKeeper(m,s);else if(m.interactive&&team(s?m.aid:m.hid).human>=0&&m.used[s]<3&&!m.pend)m.pend={k:'red',s,name:p.n}}
   else{m.yc.add(p.id);addEv(m,s,'yel',p)}
 }
 function autoKeeper(m,s){
@@ -530,15 +555,17 @@ function autoKeeper(m,s){
   const field=m.on[s].map(P).filter(p=>p.pos!=='TW').sort((a,b)=>a.str-b.str)[0];
   if(field)subst(m,s,field.id,kp.id,true);
 }
-function injury(m,s){
+function rollInjury(p){const pool=p.risk>0?INJ.slice(3):INJ;const ty=wpick(pool,pool.map(x=>x[1]));p.inj=ri(ty[2],ty[3]);p.injT=ty[0];p.risk=0;return ty}
+function injury(m,s,forced){
   const on=m.on[s].map(P);if(!on.length)return;
-  const p=pick(on);const w=ri(2,6);p.inj=w;
-  m.on[s]=m.on[s].filter(i=>i!==p.id);m.gone[s].add(p.id);m.str[s]=null;addEv(m,s,'inj',p,{w});
-  autoReplace(m,s,m.role[s][p.id]||p.pos,p.n);
+  const p=forced?P(forced):pick(on);const ty=rollInjury(p);const w=p.inj;
+  m.on[s]=m.on[s].filter(i=>i!==p.id);m.gone[s].add(p.id);m.str[s]=null;addEv(m,s,'inj',p,{w,ty:ty[0]});
+  const role=m.role[s][p.id]||p.pos;
+  if(m.interactive&&team(s?m.aid:m.hid).human>=0&&m.used[s]<3&&!m.pend)m.pend={k:'inj',s,role,name:p.n};else autoReplace(m,s,role,p.n);
 }
 function penalties(m){let a=0,b=0;for(let i=0;i<5;i++){if(R()<.76)a++;if(R()<.76)b++}while(a===b){if(R()<.76)a++;if(R()<.76)b++}m.pen=[a,b];addEv(m,-1,'info',null,{txt:`Elfmeterschießen ${a}:${b}`})}
-function attendance(t,opp,comp,exact){
-  const s=t.stadium;let base=t.fans*650*(t.league===1?1:.6);
+function attendance(t,opp,comp,exact,boost){
+  const s=t.stadium;let base=t.fans*650*(t.league===1?1:.6)*(boost||1);
   if(comp==='POK')base*=1.1;if(comp==='EUR')base*=1.4;
   base*=1+((opp?opp.fans:50)-50)/180;if(s.roof)base*=1.08;if(s.tafel)base*=1.03;base*=1+.04*(s.park||0);
   const j=()=>exact?1:rnd(.9,1.1);
@@ -562,7 +589,11 @@ function finishMatch(m){
     if(e.t==='goal'){if(league)p.g++;else p.gx++}
     else if(e.t==='yel'){if(league){p.yel++;if(p.yel%5===0)p.sus=Math.max(p.sus,2)}}
     else if(e.t==='red')p.sus=Math.max(p.sus,e.gr?2:ri(2,3));}
-  if(!m.neutral&&!H.foreign){const a=attendance(H,A,m.comp);book(H,a.inc,'ticket');m.att=a.total;const st=H.stadium;const cat=a.total*(st.wurst||0)/1000+(st.rest?6:0);if(cat)book(H,cat,'catering')}
+  if(!m.neutral&&!H.foreign){const a=attendance(H,A,m.comp,false,(m.derby?1.25:1)*(H.press&&H.press.wk===S.week&&H.press.k==='bold'?1.1:1));book(H,a.inc,'ticket');m.att=a.total;const st=H.stadium;const cat=a.total*(st.wurst||0)/1000+(st.rest?6:0);if(cat)book(H,cat,'catering')}
+  for(let s=0;s<2;s++){const t=s?A:H;if(t.human<0)continue;const h=S.humans[t.human];const my=s?m.ga:m.gh,op=s?m.gh:m.ga;const res=my>op||(m.ko&&f.w===t.id)?1:my<op||(m.ko&&f.w!==t.id)?-1:0;const opp=s?m.hid:m.aid;
+    if(m.derby){h.conf=clamp(h.conf+res*4,0,100);t.fans=clamp(t.fans+res*2,5,99)}
+    if(t.press&&t.press.wk===S.week&&t.press.opp===opp){const k=t.press.k;if(k==='bold'){if(res>0){h.conf=clamp(h.conf+4,0,100);t.fans=clamp(t.fans+2,5,99);addNews(t.human,'Versprechen gehalten','Die Kampfansage aus der Pressekonferenz ist aufgegangen. Fans und Vorstand feiern dich.',{kind:'good'})}else if(res<0){h.conf=clamp(h.conf-6,0,100);t.fans=clamp(t.fans-3,5,99);addNews(t.human,'Große Klappe, nichts dahinter','Nach der vollmundigen Pressekonferenz hagelt es Spott. Der Vorstand ist verärgert.',{kind:'bad'})}}t.press=null}
+    if(m.comp[0]==='L')t._played=[...m.played[s]]}
   for(let s=0;s<2;s++){const t=s?A:H;if(t.foreign||!t.bonus)continue;const my=s?m.ga:m.gh,op=s?m.gh:m.ga;const won=my>op||(m.ko&&f.w===t.id);if(won)book(t,-t.bonus*m.played[s].size,'bonus')}
 }
 function finishRound(r){
@@ -581,7 +612,13 @@ function weekRounds(){
   const rounds=[];
   const ci=CUP_WEEKS.indexOf(S.week);if(ci>=0&&S.cup&&!S.cup.winner){const r=cupRound(S.cup,ci,'POK');if(r)rounds.push(r)}
   const ei=EUR_WEEKS.indexOf(S.week);if(ei>=0&&S.eur&&!S.eur.winner){const r=cupRound(S.eur,ei,'EUR');if(r)rounds.push(r)}
-  if(S.week<=34){const ms=[];for(const lg of [1,2])for(const f of S.sched[lg][S.week-1])ms.push(makeMatch(f.h,f.a,'L'+lg,f));rounds.push({label:`${S.week}. Spieltag`,comp:'LIGA',matches:ms})}
+  if(S.makeup&&S.makeup.length){const ms=[];for(const [lg,md,fi] of S.makeup){const f=S.sched[lg][md]&&S.sched[lg][md][fi];if(f&&f.gh==null){f.post=false;ms.push(makeMatch(f.h,f.a,'L'+lg,f))}}S.makeup=[];if(ms.length)rounds.push({label:'Nachholspiele',comp:'NACH',matches:ms})}
+  if(S.week<=34){const ms=[];const wx=wxFor(S.week);
+    for(const lg of [1,2])S.sched[lg][S.week-1].forEach((f,fi)=>{
+      if(S.week<=32&&(wx==='schnee'||wx==='frost')&&!team(f.h).stadium.heiz&&hashN(f.h*97+S.week*13+S.year,5)<.35){f.post=true;(S.makeup=S.makeup||[]).push([lg,S.week-1,fi]);
+        for(const id of [f.h,f.a]){const t=team(id);if(t.human>=0)addNews(t.human,'Spielabsage',`${team(f.h).short} – ${team(f.a).short} fällt wegen ${WX[wx].l} aus${team(f.h).stadium.heiz?'':' (keine Rasenheizung)'}. Nachholspiel in der nächsten Woche.`)}return}
+      ms.push(makeMatch(f.h,f.a,'L'+lg,f))});
+    rounds.push({label:`${S.week}. Spieltag`,comp:'LIGA',matches:ms})}
   return rounds;
 }
 function cupRound(c,idx,comp){
@@ -618,14 +655,14 @@ function weeklyTraining(t){
   applyTfMode(t);
   const it=t.train,rec=it==='leicht'?22:it==='hart'?11:16,g=it==='leicht'?.6:it==='hart'?1.5:1,injP=it==='hart'?.008:it==='normal'?.002:.0005;
   for(const id of t.squad){const p=P(id);
-    if(p.inj>0)p.inj--;if(p.sus>0)p.sus--;
+    if(p.inj>0)p.inj--;if(p.sus>0)p.sus--;if(p.risk>0)p.risk--;if(p.moodCd>0)p.moodCd--;
     p.fit=clamp(p.fit+rec,0,100);
     const base=p.age<=20?.25:p.age<=23?.15:p.age<=27?.06:0;
     ensureP(p);
-    if(p.str<p.pot&&R()<base*g*(p.tf?1.15:1)){const w=SKW[p.pos];const k=p.tf&&w[p.tf]&&R()<.75?p.tf:wpick(Object.keys(w),Object.values(w));p.sk[k]=Math.min(99,p.sk[k]+(p.tf===k?2:1));p.str=calcStr(p);if(p.str>p.pot)p.pot=p.str}
+    if(p.str<p.pot&&R()<base*g*(p.tf?1.15:1)*(p.ch==='fleiss'?1.4:1)){const w=SKW[p.pos];const k=p.tf&&w[p.tf]&&R()<.75?p.tf:wpick(Object.keys(w),Object.values(w));p.sk[k]=Math.min(99,p.sk[k]+(p.tf===k?2:1));p.str=calcStr(p);if(p.str>p.pot)p.pot=p.str}
     if(p.age>=31&&R()<.015*(p.age-29)){const k=pick(Object.keys(SKW[p.pos]));p.sk[k]=Math.max(5,p.sk[k]-1);p.str=calcStr(p)}
-    p.form=clamp(p.form+rnd(-.5,.5)+(5-p.form)*.08+(it==='hart'?.05:0),1,10);p.fh.push(Math.round(p.form*10)/10);if(p.fh.length>8)p.fh.shift();
-    if(p.inj===0&&R()<injP){p.inj=ri(2,3);if(t.human>=0)addNews(t.human,'Trainingsverletzung',`${p.n} hat sich im Training verletzt und fällt ${p.inj-1} Woche(n) aus.`,{kind:'bad'})}
+    p.form=clamp(p.form+rnd(-.5,.5)*(p.ch==='diva'?1.7:1)+(5-p.form)*.08+(it==='hart'?.05:0),1,10);p.fh.push(Math.round(p.form*10)/10);if(p.fh.length>8)p.fh.shift();
+    if(p.inj===0&&R()<injP){p.inj=ri(2,3);p.injT='Zerrung';if(t.human>=0)addNews(t.human,'Trainingsverletzung',`${p.n} hat sich im Training verletzt und fällt ${p.inj-1} Woche(n) aus.`,{kind:'bad'})}
   }
 }
 function progressBuild(t){
@@ -667,7 +704,7 @@ function resultNews(hi,t,rounds){
 }
 function boardWeekly(hi,t,rounds){
   const h=S.humans[hi];const pos=tablePos(t);let d=0;(h.posHist=h.posHist||[]).push(pos);if(h.posHist.length>34)h.posHist.shift();
-  const lr=rounds.find(r=>r.comp==='LIGA');
+  const lr=rounds.find(r=>r.comp==='LIGA'&&r.matches.some(m=>m.hid===t.id||m.aid===t.id))||rounds.find(r=>r.comp==='NACH');
   if(lr){const m=lr.matches.find(m=>m.hid===t.id||m.aid===t.id);if(m){const my=m.hid===t.id?m.gh:m.ga,op=m.hid===t.id?m.ga:m.gh;d+=my>op?1.5:my<op?-1.5:0}}
   if(S.week>=6)d+=clamp((h.target-pos)*.25,-2,2);
   if(t.cash<-5000)d-=1.5;
@@ -681,7 +718,7 @@ function fire(hi,reason){
   const h=S.humans[hi],t=team(h.tid);t.human=-1;t.lineup=autoLineup(t);t.offers&&chooseSponsor(t,0);
   for(const id of t.squad)P(id).listed=false;
   addNews(hi,'ENTLASSEN',`${reason} Du bist nicht mehr Manager von ${t.name}. Im Büro warten neue Angebote.`,{kind:'bad'});
-  h.tid=null;h.conf=55;
+  t.coach=genName('D');h.tid=null;h.conf=55;
   const free=domestic().filter(x=>x.human<0&&x.id!==t.id).sort((a,b)=>teamRating(a)-teamRating(b));
   h.offers=shuffle(free.slice(0,14)).slice(0,3).map(x=>x.id);
 }
@@ -705,7 +742,44 @@ function bidsForListed(hi,t){
     addNews(hi,'Angebot für '+p.n,`${b.name} bietet ${money(amt)} Ablöse (Marktwert ${money(pValue(p))}). Das Angebot gilt bis zum nächsten Spieltag.`,{kind:'act',data:{pid:p.id,tid:b.id,amount:amt},acts:[['bidY','Verkaufen'],['bidN','Ablehnen']]});
   }
 }
-function expireActions(){for(const k in S.news)for(const n of S.news[k])if(n.acts&&!n.done&&n.w<S.week){n.done=true;n.res='Keine Antwort, Angebot verfallen.'}}
+function moodWeek(hi,t){
+  const played=new Set(t._played||[]);t._played=[];const top=t.squad.map(P).filter(avail).sort((a,b)=>b.str-a.str).slice(0,13).map(p=>p.id);
+  const lead=t.squad.some(id=>P(id).ch==='fuehrung');const capPlayed=t.cap&&played.has(t.cap);
+  let shown=false;
+  for(const id of t.squad){const p=P(id);ensureP(p);
+    if(played.has(id))p.mood+=5;else if(top.includes(id))p.mood-=p.ch==='diva'?12:6;else p.mood+=(60-p.mood)*.05;
+    if(capPlayed&&id!==t.cap)p.mood+=1;if(lead&&p.mood<70)p.mood+=1;p.mood=clamp(p.mood,0,100);
+    if(!shown&&p.mood<30&&!(p.moodCd>0)){shown=true;p.moodCd=5;addNews(hi,`${p.n} ist unzufrieden`,`${p.n}${p.ch==='diva'?' (Diva)':''} fühlt sich übergangen und denkt an einen Wechsel.`,{kind:'act',data:{pid:p.id},acts:[['moodTalk','Gespräch mit Gehaltsplus (+10 %)'],['moodList','Auf die Transferliste'],['moodIgnore','Ignorieren']]})}
+    if(p.ch==='skandal'&&!shown&&R()<.05){shown=true;addNews(hi,'Ärger um '+p.n,`${p.n} ${pick(['wurde nachts in einer Diskothek gesehen','kam zu spät zum Training','hat in einem Interview den Trainer kritisiert','wurde mit deutlich zu hohem Tempo geblitzt','hat sich im Training lautstark mit einem Mitspieler gestritten'])}. Die Presse berichtet groß.`,{kind:'act',data:{pid:p.id},acts:[['scFine','Geldstrafe'],['scSusp','Suspendieren (1 Woche)'],['scIgnore','Ignorieren']]})}
+  }
+}
+function aiCoaches(){
+  for(const lg of [1,2]){const tbl=computeTable(lg);const n=tbl.length;
+    for(const r of tbl.slice(n-3)){const t=team(r.id);if(t.human>=0||R()>.06)continue;const old=t.coach||'der Trainer';t.coach=genName('D');
+      for(const id of t.squad){const p=P(id);p.form=clamp(p.form+1,1,10)}
+      S.humans.forEach((h,hi)=>{if(h.tid)addNews(hi,'Trainerwechsel bei '+t.short,`${t.name} trennt sich von ${old}. Nachfolger ${t.coach} soll die Wende bringen, die Mannschaft wirkt wie ausgewechselt.`)})}}
+}
+function poach(hi,t){
+  if(R()>.25)return;const tops=t.squad.map(P).filter(p=>!p.listed).sort((a,b)=>b.str-a.str).slice(0,3);const p=pick(tops);if(!p)return;
+  const buyers=leagueTeams(1).filter(x=>x.human<0&&x.id!==t.id&&x.squad.length<28).sort((a,b)=>teamRating(b)-teamRating(a)).slice(0,8);if(!buyers.length)return;const b=pick(buyers);
+  const amt=Math.round(pValue(p)*rnd(1.25,1.6)/10)*10;
+  addNews(hi,`${b.short} will ${p.n}`,`${b.name} bietet ${money(amt)} für ${p.n} (Marktwert ${money(pValue(p))}). Der Spieler wäre interessiert. Lehnst du ab, ist er enttäuscht.`,{kind:'act',data:{pid:p.id,tid:b.id,amount:amt},acts:[['bidY','Verkaufen'],['poachN','Ablehnen']]});
+}
+function deadlineDay(hi,t){
+  const rt=teamRating(t);const cands=Object.values(S.players).filter(p=>p.tid&&!p.yth&&team(p.tid).human<0&&!team(p.tid).foreign&&p.str>=rt-2&&p.str<=rt+8&&team(p.tid).squad.length>17);
+  const p=pick(cands);addNews(hi,'Deadline-Day!','Letzte Woche des Transferfensters. Die Telefone glühen.',{kind:'act'});
+  if(p){const amt=Math.round(pValue(p)*rnd(.8,1)/10)*10;addNews(hi,'Last-Minute-Angebot',`${team(p.tid).name} bietet dir ${p.n} (${POSN[p.pos]}, ${p.age}, Stärke ${p.str}) für ${money(amt)} an. Nur noch diese Woche.`,{kind:'act',data:{pid:p.id,amount:amt},acts:[['dlBuy','Zuschlagen'],['dlNo','Ablehnen']]})}
+}
+function pressConf(hi,t){
+  const fx=weekFixturesFor(t.id);if(!fx.length)return;const pos=tablePos(t);let pick1=null,why='';
+  for(const x of fx){const o=x.f.h===t.id?x.f.a:x.f.h;const ot=team(o);
+    if(isDerby(t.id,o)){pick1=o;why='Derby gegen '+ot.short;break}
+    if(x.comp.startsWith('Pokal')||x.comp.startsWith('Europa')){pick1=o;why=x.comp.split(' ·')[0]+'spiel gegen '+ot.short;break}
+    if(!ot.foreign&&ot.league===t.league){const op=tablePos(ot);if(S.week>=6&&pos<=4&&op<=4){pick1=o;why='Spitzenspiel gegen '+ot.short;break}if(S.week>=10&&t.league===1&&pos>=14&&op>=14){pick1=o;why='Kellerduell gegen '+ot.short;break}}}
+  if(!pick1)return;
+  addNews(hi,'Pressekonferenz',`Vor dem ${why} wollen die Journalisten eine Ansage hören.`,{kind:'act',data:{opp:pick1},acts:[['pcBold','„Wir gewinnen das!“'],['pcHot','„Die Mannschaft brennt.“'],['pcResp','„Respekt vor dem Gegner.“']]});
+}
+function expireActions(){for(const k in S.news)for(const n of S.news[k])if(n.acts&&!n.done&&n.w<S.week-1){n.done=true;n.res='Keine Antwort, Angebot verfallen.'}}
 function transferPlayer(p,toTid,fee){
   if(p.tid){const from=team(p.tid);from.squad=from.squad.filter(i=>i!==p.id);from.lineup=from.lineup.map(i=>i===p.id?null:i);book(from,fee,'transfer')}
   else S.free=S.free.filter(i=>i!==p.id);
@@ -732,12 +806,16 @@ function endWeek(rounds){
     resultNews(hi,t,rounds);
     boardWeekly(hi,t,rounds);
     if(!h.tid)return;
-    bidsForListed(hi,t);
+    moodWeek(hi,t);
     if(R()<.22)randomEvent(hi,t);
     if(wk===28){const ex=t.squad.map(P).filter(p=>p.con<=1);if(ex.length)addNews(hi,'Auslaufende Verträge',`Diese Verträge enden mit der Saison: ${ex.map(p=>p.n).join(', ')}. Verlängere im Kader, sonst gehen die Spieler ablösefrei.`,{kind:'act'})}
   });
+  if(wk>=8)aiCoaches();
   S.week++;expireActions();
   if(S.week>34)seasonEnd();
+  else S.humans.forEach((h,hi)=>{if(!h.tid)return;const t=team(h.tid);
+    if(windowOpen()){bidsForListed(hi,t);poach(hi,t);if(S.week===4||S.week===19)deadlineDay(hi,t)}
+    pressConf(hi,t)});
   S.turn=0;
 }
 function maintainAI(t){
@@ -798,6 +876,8 @@ function settleToto(hi,t,wk){
   addNews(hi,'Toto-Ergebnis',`${ok} von 11 richtig.${win?' Gewinn: '+money(win)+'!':' Leider kein Gewinn.'}`,{kind:win?'good':'info'});t.toto=null;
 }
 function migrate(){
+  if(S.settings.dec==null)S.settings.dec=true;if(!S.makeup)S.makeup=[];
+  for(const t of S.teams)if(!t.foreign&&t.human<0&&!t.coach)t.coach=genName('D');
   if(S.schedV!==2){for(const lg of [1,2])fixVenueStreaks(lg);S.schedV=2}
   if(!S.market)S.market=initMarket();if(S.settings.scenes==null)S.settings.scenes=true;
   for(const p of Object.values(S.players))ensureP(p);
@@ -846,7 +926,9 @@ function weekFixturesFor(tid){
   const out=[];const t=team(tid);
   const ci=CUP_WEEKS.indexOf(S.week);if(ci>=0&&!S.cup.winner&&S.cup.alive.includes(tid)&&S.cup.rounds[ci]){const f=S.cup.rounds[ci].fx.find(f=>f.h===tid||f.a===tid);if(f)out.push({comp:'Pokal',f})}
   const ei=EUR_WEEKS.indexOf(S.week);if(ei>=0&&!S.eur.winner&&S.eur.alive.includes(tid)&&S.eur.rounds[ei]){const f=S.eur.rounds[ei].fx.find(f=>f.h===tid||f.a===tid);if(f)out.push({comp:'Europa',f})}
+  for(const [lg,md,fi] of S.makeup||[]){const f=S.sched[lg][md][fi];if(f&&(f.h===tid||f.a===tid))out.push({comp:'Nachholspiel',f})}
   if(S.week<=34){const f=S.sched[t.league][S.week-1].find(f=>f.h===tid||f.a===tid);if(f)out.push({comp:'Liga',f})}
+  for(const x of out)if(isDerby(x.f.h,x.f.a))x.comp+=' · DERBY';
   return out;
 }
 
@@ -903,7 +985,8 @@ function viewOffice(){
      <p class="small dim" style="margin:8px 0 0">Sponsor: ${t.sponsor?esc(t.sponsor.name):'noch offen'} · Fans: ${Math.round(t.fans)}/100 · Bilanz als Manager: ${h.career.s} S, ${h.career.u} U, ${h.career.n} N</p>
     </div></div>
     ${offers}
-    <div class="panel"><h2>Diese Woche</h2><div class="bd fxl">${fx.length?fx.map(x=>fixRow(x.f,t.id,x.comp)).join(''):'<p class="empty">Keine Spiele.</p>'}</div></div>
+    ${windowOpen()?`<div class="panel"><h2>Transferfenster</h2><div class="bd"><p style="margin:0" class="${S.week===4||S.week===19?'hi':''}">${windowText()}</p></div></div>`:''}
+    <div class="panel"><h2>Diese Woche <small>${WX[wxFor(S.week)].i} ${WX[wxFor(S.week)].l}</small></h2><div class="bd fxl">${fx.length?fx.map(x=>{const o=team(x.f.h===t.id?x.f.a:x.f.h);return fixRow(x.f,t.id,x.comp)+(o.coach?`<div class="small dim" style="margin:-2px 0 4px 8px">Trainer ${esc(o.short)}: ${esc(o.coach)}</div>`:'')}).join(''):'<p class="empty">Keine Spiele.</p>'}</div></div>
     ${lw.length?`<div class="panel"><h2>Letzte Woche</h2><div class="bd fxl">${lw.map(x=>fixRow(x,t.id,x.label)).join('')}</div></div>`:''}
    </div>
    ${newsPanel()}
@@ -924,11 +1007,11 @@ function posSpark(h,t){
   <div class="small dim">Beste Platzierung ${best}., schlechteste ${worst}. · Gestrichelt: Saisonziel Platz ${h.target}</div></div>`}
 function fixRow(f,me,label){
   const played=f.gh!=null;const pen=f.pen?`<div class="small dim c">i. E. ${f.pen[0]}:${f.pen[1]}</div>`:'';
-  return `<div class="fx${f.h===me||f.a===me?' me':''}"><div class="h${played&&(f.gh>f.ga||(f.pen&&f.pen[0]>f.pen[1]))?' w':''}">${tname(f.h)}</div><div><div class="s">${played?f.gh+':'+f.ga:'–:–'}</div>${pen}${label?`<div class="small dim c">${esc(label)}</div>`:''}</div><div class="a${played&&(f.ga>f.gh||(f.pen&&f.pen[1]>f.pen[0]))?' w':''}">${tname(f.a)}</div></div>`;
+  return `<div class="fx${f.h===me||f.a===me?' me':''}"><div class="h${played&&(f.gh>f.ga||(f.pen&&f.pen[0]>f.pen[1]))?' w':''}">${tname(f.h)}</div><div><div class="s">${played?f.gh+':'+f.ga:f.post?'abg.':'–:–'}</div>${pen}${label?`<div class="small dim c">${esc(label)}</div>`:''}</div><div class="a${played&&(f.ga>f.gh||(f.pen&&f.pen[1]>f.pen[0]))?' w':''}">${tname(f.a)}</div></div>`;
 }
 
 /* ---------- Kader ---------- */
-function statusTags(p){let s='';if(p.inj)s+=`<span class="tag inj">verletzt ${Math.max(1,p.inj-1)} Wo.</span>`;if(p.sus)s+=`<span class="tag sus">gesperrt</span>`;if(p.listed)s+=`<span class="tag lst">Transferliste</span>`;if(p.con<=1&&p.tid)s+=`<span class="tag exp">Vertrag endet</span>`;return s}
+function statusTags(p){let s='';const tm=p.tid?team(p.tid):null;if(tm&&tm.cap===p.id)s+=`<span class="tag lst" title="Kapitän">C</span>`;if(p.ch)s+=`<span class="tag exp" title="Persönlichkeit">${CHAR[p.ch]}</span>`;if(p.inj)s+=`<span class="tag inj">${esc(p.injT||'verletzt')} · ${Math.max(1,p.inj-1)} Wo.</span>`;if(p.risk>0&&!p.inj)s+=`<span class="tag sus" title="Rückfallgefahr">angeschlagen</span>`;if(p.sus)s+=`<span class="tag sus">gesperrt</span>`;if(p.listed)s+=`<span class="tag lst">Transferliste</span>`;if(p.con<=1&&p.tid)s+=`<span class="tag exp">Vertrag endet</span>`;return s}
 function viewSquad(){
   const t=curTeam(),lu=new Set(t.lineup.filter(id=>t.squad.includes(id)));
   const need=FORMS[t.tactic.form];const cnt=c=>[...lu].filter(id=>P(id).pos===c).length;
@@ -943,6 +1026,7 @@ function viewSquad(){
    <div class="tw"><table><thead><tr><th>S11</th><th>Name</th><th>Pos</th><th class="n">Alter</th><th class="n">Stärke</th><th class="n">Potenzial</th><th class="n">Form</th><th>Fitness</th><th>Profil</th><th class="n">Vertrag</th><th class="n hide-s">Wert</th></tr></thead><tbody>${rows}</tbody></table></div>
   </div></div>`;
 }
+function moodText(p){ensureP(p);const v=p.mood;const [c,l]=v>=80?['good','bestens']:v>=60?['good','zufrieden']:v>=40?['','durchwachsen']:v>=25?['warn','unzufrieden']:['bad','will weg'];return `<span class="${c}">${l}</span> <span class="small dim">(${Math.round(v)})</span>`}
 function skillBlock(p,mine){
   ensureP(p);const w=SKW[p.pos];const sw=strengths(p);
   const rows=SK.filter(k=>w[k]||p.pos!=='TW'&&k!=='TWR').map(k=>`<div class="strbar" style="grid-template-columns:92px 1fr 32px"><span class="small ${sw.best.includes(k)?'good':k===sw.worst?'bad':''}">${SKN[k]}${w[k]?'':' ·'}</span>${meter(p.sk[k],99,w[k]?'var(--cyan)':'var(--line)')}<span class="n small">${p.sk[k]}</span></div>`).join('');
@@ -959,12 +1043,14 @@ function playerModal(id){
     acts=`<div class="lbl" style="margin-top:12px">Vertrag verlängern</div><p class="small dim" style="margin:2px 0 6px">Forderung: ${money(wage)} pro Saison (bisher ${money(p.sal)})</p><div class="row">${[1,2,3,4].map(y=>`<button class="btn sm" data-act="extend" data-id="${p.id}" data-y="${y}"${p.age>=34&&y>1?' disabled':''}>bis ${S.year+y+1}</button>`).join('')}</div>
     <div class="lbl" style="margin-top:12px">Transfer</div><div class="row" style="margin-top:4px">
      <button class="btn sm" data-act="list" data-id="${p.id}">${p.listed?'Von Transferliste nehmen':'Auf Transferliste setzen'}</button>
+     ${t.cap===p.id?'<span class="small hi">Kapitän</span>':`<button class="btn sm" data-act="setCap" data-id="${p.id}">Zum Kapitän ernennen</button>`}
+     ${p.inj>=3&&!['Kreuzbandriss','Knochenbruch'].includes(p.injT)?`<button class="btn sm danger" data-act="fitspritze" data-id="${p.id}">Früher zurückholen (Rückfallgefahr)</button>`:''}
      ${c==='sell'+p.id?`<button class="btn sm pri" data-act="sellNow" data-id="${p.id}">Wirklich für ${money(sell)} verkaufen</button>`:`<button class="btn sm" data-act="confirm" data-k="sell${p.id}" data-id="${p.id}">Sofort verkaufen (${money(sell)})</button>`}
      ${c==='rel'+p.id?`<button class="btn sm danger" data-act="release" data-id="${p.id}">Wirklich entlassen (${money(sev)} Abfindung)</button>`:`<button class="btn sm danger" data-act="confirm" data-k="rel${p.id}" data-id="${p.id}">Entlassen</button>`}
     </div><p class="small dim" style="margin:6px 0 0">Spieler auf der Transferliste bekommen jede Woche mit etwas Glück Angebote im Posteingang.</p>`;
   }
   openModal(`<h2>${esc(p.n)} <small>${POSN[p.pos]}</small></h2><div class="bd">
-   <dl class="kv"><dt>Verein</dt><dd>${own?tname(own.id):'vereinslos'}</dd><dt>Alter</dt><dd>${p.age}</dd><dt>Stärke</dt><dd><b>${p.str}</b></dd><dt>Form</dt><dd>${p.form.toFixed(1)} / 10</dd><dt>Fitness</dt><dd>${Math.round(p.fit)} %</dd><dt>Marktwert</dt><dd>${money(pValue(p))}</dd><dt>Gehalt</dt><dd>${money(p.sal)} pro Saison</dd><dt>Vertrag</dt><dd>${p.tid?'bis '+(S.year+p.con):'–'}</dd><dt>Saison</dt><dd>${p.sp} Ligaspiele · ${p.g} Tore · ${p.gx} Pokaltore · ${p.yel} Gelbe</dd></dl>
+   <dl class="kv"><dt>Verein</dt><dd>${own?tname(own.id):'vereinslos'}</dd><dt>Alter</dt><dd>${p.age}</dd><dt>Stärke</dt><dd><b>${p.str}</b></dd><dt>Form</dt><dd>${p.form.toFixed(1)} / 10</dd><dt>Fitness</dt><dd>${Math.round(p.fit)} %</dd><dt>Persönlichkeit</dt><dd>${p.ch?CHAR[p.ch]:'unauffällig'}</dd><dt>Stimmung</dt><dd>${moodText(p)}</dd><dt>Marktwert</dt><dd>${money(pValue(p))}</dd><dt>Gehalt</dt><dd>${money(p.sal)} pro Saison</dd><dt>Vertrag</dt><dd>${p.tid?'bis '+(S.year+p.con):'–'}</dd><dt>Saison</dt><dd>${p.sp} Ligaspiele · ${p.g} Tore · ${p.gx} Pokaltore · ${p.yel} Gelbe</dd></dl>
    <div style="margin-top:6px">${statusTags(p)}</div>${skillBlock(p,mine)}${acts}
    <div class="row" style="margin-top:14px;justify-content:flex-end"><button class="btn" data-act="closeModal">Schließen</button></div></div>`);
 }
@@ -1053,6 +1139,7 @@ function viewMarket(){
   list=list.slice(0,60);
   const mine=me.squad.map(P).filter(p=>p.listed);
   return `<div class="panel"><h2>Transfermarkt <small>Kasse ${money(me.cash)} · Kader ${me.squad.length}/30</small></h2><div class="bd">
+   <p class="${windowOpen()?'good':'warn'} small" style="margin:0 0 10px">${windowText()}</p>
    <div class="row" style="margin-bottom:10px">
     <div class="seg">${[['','Alle'],['TW','TW'],['AB','AB'],['MF','MF'],['ST','ST']].map(([k,l])=>`<button data-act="mk" data-k="pos" data-v="${k}" class="${f.pos===k?'on':''}">${l}</button>`).join('')}</div>
     <select id="mk-src" data-chg="mkSrc" aria-label="Herkunft">${[['all','Alle Spieler'],['free','Vereinslos'],['l1','Bundesliga'],['l2','2. Bundesliga'],['int','Ausland'],['young','Talente bis 21']].map(([k,l])=>`<option value="${k}"${f.src===k?' selected':''}>${l}</option>`).join('')}</select>
@@ -1064,24 +1151,29 @@ function viewMarket(){
    </tbody></table></div></div></div>
    <div class="panel"><h2>Meine Transferliste</h2><div class="bd">${mine.length?mine.map(p=>`<div class="row" style="justify-content:space-between;padding:4px 0"><span>${posChip(p)} ${esc(p.n)} · Wert ${money(pValue(p))}</span><button class="btn sm" data-act="list" data-id="${p.id}">Zurückziehen</button></div>`).join(''):'<p class="empty">Keine Spieler gelistet. Setze Spieler im Kader auf die Liste.</p>'}</div></div>`;
 }
+function openAuction(p,fct,rv){UI.auc=rv.id;const nf=Math.round((fct+.3)*100)/100;const ask=askPrice(p);
+  openModal(`<h2>Bietgefecht!</h2><div class="bd"><p>${esc(rv.name)} ist ebenfalls an ${esc(p.n)} interessiert und überbietet dich. ${esc(team(p.tid).name)} verlangt jetzt mehr.</p><div class="row"><button class="btn pri" data-act="auction" data-id="${p.id}" data-f="${nf}">Mitgehen: ${money(Math.round(ask*nf/10)*10)}</button><button class="btn" data-act="closeModal">Aussteigen</button></div><p class="small dim">Auch beim Mitgehen kann der Konkurrent noch den Zuschlag bekommen.</p></div>`)}
 function buyModal(id){
   const p=P(id),me=curTeam();const ask=askPrice(p),wage=wageDemand(p);const blocked=p.noDeal===S.year*100+S.week;
   const yrs=UI.buyY||2;
-  const offerBtns=p.tid?[[.8,'80 %'],[1,'Forderung'],[1.2,'120 %']].map(([fct,l])=>`<button class="btn ${fct===1?'pri':''}" data-act="buy" data-id="${p.id}" data-f="${fct}"${blocked?' disabled':''}>${l}: ${money(Math.round(ask*fct/10)*10)}</button>`).join(''):`<button class="btn pri" data-act="buy" data-id="${p.id}" data-f="1">Verpflichten (Handgeld ${money(Math.round(wage*.25))})</button>`;
+  const closed=p.tid&&!windowOpen();
+  const offerBtns=p.tid?[[.8,'80 %'],[1,'Forderung'],[1.2,'120 %']].map(([fct,l])=>`<button class="btn ${fct===1?'pri':''}" data-act="buy" data-id="${p.id}" data-f="${fct}"${blocked||closed?' disabled':''}>${l}: ${money(Math.round(ask*fct/10)*10)}</button>`).join(''):`<button class="btn pri" data-act="buy" data-id="${p.id}" data-f="1">Verpflichten (Handgeld ${money(Math.round(wage*.25))})</button>`;
   openModal(`<h2>${esc(p.n)} <small>${POSN[p.pos]}</small></h2><div class="bd">
    <dl class="kv"><dt>Verein</dt><dd>${p.tid?tname(p.tid):'vereinslos'}</dd><dt>Alter</dt><dd>${p.age}</dd><dt>Stärke</dt><dd><b>${p.str}</b></dd><dt>Form / Fitness</dt><dd>${p.form.toFixed(1)} / ${Math.round(p.fit)} %</dd><dt>Potenzial</dt><dd>${potCell(p)}</dd><dt>Marktwert</dt><dd>${money(pValue(p))}</dd><dt>Gehaltsforderung</dt><dd>${money(wage)} pro Saison</dd><dt>Saison</dt><dd>${p.sp} Spiele, ${p.g} Tore</dd></dl>
    <div class="lbl" style="margin-top:12px">Vertragslaufzeit</div><div class="seg" style="margin:4px 0 12px">${[1,2,3,4].map(y=>`<button data-act="buyY" data-id="${p.id}" data-y="${y}" class="${yrs===y?'on':''}">${y} J.</button>`).join('')}</div>
-   ${blocked?`<p class="warn small">${esc(team(p.tid).name)} hat diese Woche schon abgelehnt.</p>`:p.tid?'<p class="small dim">Ein Angebot unter der Forderung wird oft abgelehnt, 120 % klappt immer.</p>':''}
+   ${closed?`<p class="warn small">${windowText()}</p>`:blocked?`<p class="warn small">${esc(team(p.tid).name)} hat diese Woche schon abgelehnt.</p>`:p.tid?'<p class="small dim">Ein Angebot unter der Forderung wird oft abgelehnt, 120 % klappt immer.</p>':''}
    <div class="row">${offerBtns}</div>
    <p class="small" style="margin:10px 0 0"><span class="lbl">Co-Trainer:</span> ${potText(p)}</p>
    <div class="row" style="margin-top:14px;justify-content:flex-end"><button class="btn" data-act="closeModal">Abbrechen</button></div></div>`);
 }
-function tryBuy(id,fct){
-  const t=curTeam(),p=P(id),ask=askPrice(p),fee=Math.round(ask*fct/10)*10,wage=wageDemand(p),extra=p.tid?0:Math.round(wage*.25),yrs=UI.buyY||2;
+function tryBuy(id,fct,auc){
+  const t=curTeam(),p=P(id);if(p.tid&&!windowOpen())return toast(windowText());
+  if(p.tid&&!auc&&fct>=1&&R()<.25){const rv=pick(domestic().filter(x=>x.human<0&&x.id!==p.tid&&x.squad.length<28));if(rv){openAuction(p,fct,rv);return}}
+  const ask=askPrice(p),fee=Math.round(ask*fct/10)*10,wage=wageDemand(p),extra=p.tid?0:Math.round(wage*.25),yrs=UI.buyY||2;
   if(t.squad.length>=30)return toast('Kader voll: maximal 30 Spieler.');
   if(t.cash-fee-extra<-2000)return toast('Nicht genug Geld. Der Kreditrahmen liegt bei 2 Mio. DM.');
   if(p.tid){const from=team(p.tid);if(from.squad.length<=16)return toast(`${from.name} gibt keine Spieler mehr ab.`);
-    const acc=fct>=1.2?1:fct>=1?.85:.35;if(R()>acc){p.noDeal=S.year*100+S.week;closeModal();toast(`${from.name} lehnt das Angebot ab.`);render();return}}
+    const acc=auc?.72:fct>=1.2?1:fct>=1?.85:.35;if(R()>acc){if(auc&&UI.auc){const rv=team(UI.auc);if(rv&&rv.squad.length<28){const fee2=Math.round(askPrice(p)*fct/10)*10;transferPlayer(p,rv.id,fee2);closeModal();toast(`${rv.name} bekommt den Zuschlag.`);addNews(S.turn,'Bietgefecht verloren',`${p.n} wechselt für ${money(fee2)} zu ${rv.name}.`,{kind:'bad'});render();return}}p.noDeal=S.year*100+S.week;closeModal();toast(`${from.name} lehnt das Angebot ab.`);render();return}}
   const fromName=p.tid?team(p.tid).name:'vereinslos';
   transferPlayer(p,t.id,fee);if(extra)book(t,-extra,'transfer');p.sal=wage;p.con=yrs;
   addNews(S.turn,'Neuzugang: '+p.n,`${p.n} (${POSN[p.pos]}, ${p.age} Jahre, Stärke ${p.str}) kommt ${p.tid&&fee?'für '+money(fee)+' ':''}von ${fromName}. Vertrag bis ${S.year+yrs}.`,{kind:'good'});
@@ -1155,6 +1247,7 @@ function viewSystem(){
    <div class="lbl">Musik im Menü</div><div class="seg" style="margin:4px 0 12px"><button data-act="sndSet" data-k="music" data-v="1" class="${SND.on.music?'on':''}">An</button><button data-act="sndSet" data-k="music" data-v="0" class="${!SND.on.music?'on':''}">Aus</button></div>
    <div class="lbl">Fans und Pfiffe im Spiel</div><div class="seg" style="margin:4px 0 12px"><button data-act="sndSet" data-k="sfx" data-v="1" class="${SND.on.sfx?'on':''}">An</button><button data-act="sndSet" data-k="sfx" data-v="0" class="${!SND.on.sfx?'on':''}">Aus</button></div>
    <label for="snd-vol" style="margin-bottom:12px">Lautstärke<input id="snd-vol" type="range" min="0" max="100" value="${Math.round(SND.vol*100)}" data-chg="vol" style="padding:0"></label>
+   <div class="lbl">Entscheidungen im Spiel</div><div class="seg" style="margin:4px 0 12px"><button data-act="decSet" data-v="1" class="${S.settings.dec!==false?'on':''}">An</button><button data-act="decSet" data-v="0" class="${S.settings.dec===false?'on':''}">Aus</button></div>
    <div class="lbl">Torszenen eigener Spiele</div><div class="seg" style="margin:4px 0 12px"><button data-act="sceneSet" data-v="1" class="${S.settings.scenes?'on':''}">An</button><button data-act="sceneSet" data-v="0" class="${!S.settings.scenes?'on':''}">Aus</button></div>
    <div class="lbl">Halbzeitpause mit Wechseln</div><div class="seg" style="margin-top:4px"><button data-act="htSet" data-v="1" class="${S.settings.halftime?'on':''}">An</button><button data-act="htSet" data-v="0" class="${!S.settings.halftime?'on':''}">Aus</button></div>
    <div style="margin-top:16px">${UI.confirm==='new'?`<button class="btn danger" data-act="newGame">Ja, aktuelles Spiel beenden</button> <button class="btn" data-act="confirm" data-k="">Abbrechen</button>`:`<button class="btn danger" data-act="confirm" data-k="new">Neues Spiel</button>`}</div></div></div></div>
@@ -1165,6 +1258,9 @@ function viewSystem(){
     <h3>Geld</h3><p>Einnahmen kommen aus Zuschauern, Fernsehen, Sponsor, Prämien und Verkäufen. Gehälter sind der größte Posten. Größere Stadien und faire Preise bringen mehr Zuschauer.</p>
     <h3>Vorstand</h3><p>Das Vertrauen steigt mit Siegen und einem Tabellenplatz über dem Ziel. Fällt es zu tief, wirst du entlassen und bekommst Angebote von anderen Klubs.</p>
     <h3>Aufstellung und Training</h3><p>Unter Aufstellung ziehst du Spieler frei über den Platz. Wer außerhalb seiner Position spielt, verliert Stärke. Die Kraft sinkt im Spiel Minute für Minute, ausgelaugte Spieler solltest du auswechseln. Im Einzeltraining legst du pro Spieler einen Schwerpunkt fest.</p>
+    <h3>Drama im Spiel</h3><p>Bei Elfmetern wählst du den Schützen, nach Platzverweisen und Verletzungen entscheidest du über die Umstellung. Liegst du ab der 70. Minute hinten, kannst du alles nach vorne werfen, bei knapper Führung mauern. Derbys bringen mehr Zuschauer, Karten und Emotionen. Bei Schnee und Frost fallen Spiele ohne Rasenheizung aus und werden nachgeholt.</p>
+    <h3>Charaktere</h3><p>Führungsspieler und der Kapitän stärken die Mannschaft, Diven werden auf der Bank schnell unzufrieden, Trainingsweltmeister entwickeln sich schneller, Skandalnudeln sorgen für Schlagzeilen. Verletzte kannst du früher zurückholen, dann droht ein Rückfall.</p>
+    <h3>Transfers und Presse</h3><p>Transfers mit anderen Vereinen gehen nur vom 1. bis 4. und vom 17. bis 19. Spieltag, Vereinslose immer. Vor großen Spielen gibst du Pressekonferenzen, andere Klubs versuchen deine Stars abzuwerben.</p>
     <h3>Bank und Toto</h3><p>Kredite, Festgeld, Aktien und Immobilien findest du unter Bank, dazu jede Woche die Toto-Elferwette.</p>
     <h3>Ton</h3><p>Im Menü läuft Musik, während der Spiele hörst du das Stadion. Der Ton startet beim ersten Tippen. Mit ♪ oben rechts schaltest du alles stumm, Details unter Einstellungen.</p>
     <h3>Auf- und Abstieg</h3><p>Die letzten drei der Bundesliga steigen ab, die ersten drei der 2. Bundesliga auf. Die ersten vier der Bundesliga spielen im Europapokal.</p>
@@ -1200,7 +1296,7 @@ function viewLineup(){
   const tokens=t.slots.map((sl,i)=>{const id=t.lineup[i];const p=id!=null?P(id):null;const role=slotRole(sl);
     if(!p)return `<button class="tok empty${sel===i?' sel':''}" style="left:${sl.x}%;top:${sl.y}%" data-tok="${i}" aria-label="Freie Position ${role}"><b>+</b><span>${role}</span></button>`;
     const off=role!==p.pos,bad=!avail(p);
-    return `<button class="tok${sel===i?' sel':''}${off?' off':''}${bad?' bad':''}" style="left:${sl.x}%;top:${sl.y}%" data-tok="${i}" aria-label="${esc(p.n)} als ${role}"><i class="pos ${p.pos}">${p.pos}</i><b>${esc(p.n.split(' ').slice(-1)[0])}</b><span>${p.str}${off?' · '+role:''}</span><em style="width:${Math.round(p.fit)}%"></em></button>`}).join('');
+    return `<button class="tok${sel===i?' sel':''}${off?' off':''}${bad?' bad':''}" style="left:${sl.x}%;top:${sl.y}%" data-tok="${i}" aria-label="${esc(p.n)} als ${role}"><i class="pos ${p.pos}">${p.pos}</i><b>${esc(p.n.split(' ').slice(-1)[0])}${t.cap===p.id?' ©':''}</b><span>${p.str}${off?' · '+role:''}${p.risk>0?' · !':''}</span><em style="width:${Math.round(p.fit)}%"></em></button>`}).join('');
   const inXI=new Set(t.lineup.filter(x=>x!=null));
   const bench=t.squad.map(P).filter(p=>!inXI.has(p.id)).sort((a,b)=>POS.indexOf(a.pos)-POS.indexOf(b.pos)||b.str-a.str);
   const LP=lineupWithRoles(t);const st=teamStr(LP.ids,t.tactic.style,t.tactic.hart,LP.roles);
@@ -1264,7 +1360,7 @@ function nextRound(){
   while(TK.ri<TK.rounds.length){
     const r=TK.rounds[TK.ri];
     if(S.settings.speed==='sofort'||!r.matches.some(humanInMatch)){for(const m of r.matches)while(!m.done)simMinute(m);finishRound(r);r.fin=true;TK.ri++;continue}
-    TK.live=r;TK.ht=false;TK.htDone=false;r.fin=false;$('#ov').hidden=false;for(const m of r.matches)m._seen=0;sndMode('match');sndWhistle([1.1]);renderTicker();startTimer();return;
+    TK.live=r;TK.ht=false;TK.htDone=false;TK.dec=null;r.fin=false;$('#ov').hidden=false;for(const m of r.matches){m._seen=0;m.interactive=S.settings.dec!==false&&humanInMatch(m)}sndMode('match');sndWhistle([1.1]);renderTicker();startTimer();return;
   }
   endWeek(TK.rounds);sndMode('menu');showSummary();
 }
@@ -1275,16 +1371,21 @@ function tick(){
   for(const m of r.matches)if(!m.done)simMinute(m);
   sndEvents(r);
   if(S.settings.scenes&&S.settings.speed!=='schnell'){for(const m of r.matches){if(!humanInMatch(m))continue;const g=m.ev.find(e=>e.t==='goal'&&e.min===m.min&&!e._sc);if(g){g._sc=1;stopTimer();TK.scene={m,e:g};renderTicker();playScene(m,g);return}}}
+  if(S.settings.dec!==false){for(const m of r.matches){if(!humanInMatch(m)||m.done)continue;
+    if(m.pend){stopTimer();TK.dec={m};if(m.pend.k==='pen')sndWhistle([.5]);renderTicker();return}
+    for(let s=0;s<2;s++){if(team(s?m.aid:m.hid).human<0)continue;const my=s?m.ga:m.gh,op=s?m.gh:m.ga;
+      if(m.min>=70&&m.min<87&&my<op&&!m.asked[s].push&&m.style[s]!=='allin'){m.asked[s].push=1;stopTimer();TK.dec={m,k:'push',s};renderTicker();return}
+      if(m.min>=75&&m.min<87&&my-op===1&&!m.asked[s].bus&&m.style[s]!=='bus'){m.asked[s].bus=1;stopTimer();TK.dec={m,k:'bus',s};renderTicker();return}}}}
   const mins=r.matches.filter(m=>!m.done).map(m=>m.min);
   if(S.settings.halftime&&!TK.htDone&&r.matches.some(m=>humanInMatch(m)&&m.min>=45&&!m.done)){TK.htDone=true;TK.ht=true;stopTimer();sndWhistle([.55,.9]);renderTicker();return}
   if(!mins.length){stopTimer();finishRound(r);r.fin=true;sndWhistle([.22,.22,1.2])}
   renderTicker();
 }
-function skipRound(){const r=TK.live;stopTimer();for(const m of r.matches)while(!m.done)simMinute(m);for(const m of r.matches)m._seen=m.ev.length;TK.ht=false;finishRound(r);r.fin=true;sndWhistle([.22,.22,1.2]);renderTicker()}
+function skipRound(){const r=TK.live;stopTimer();TK.dec=null;for(const m of r.matches){m.interactive=false;while(!m.done)simMinute(m)}for(const m of r.matches)m._seen=m.ev.length;TK.ht=false;finishRound(r);r.fin=true;sndWhistle([.22,.22,1.2]);renderTicker()}
 function evLine(e,m){
   const side=e.s>=0?team(e.s?m.aid:m.hid).short:'';
   const lab={goal:['goal','TOR'],yel:['yel','GELB'],red:['red',e.gr?'G-ROT':'ROT'],inj:['inj','VERL.'],sub:['sub','WECHSEL'],info:['info','INFO'],chance:['info','CHANCE']}[e.t];
-  const txt=e.t==='goal'?`<b>${esc(e.n)}</b> (${esc(side)}) · ${e.sc}`:e.t==='sub'?`${esc(e.n)} für ${esc(e.out)} (${esc(side)})`:e.t==='inj'?`${esc(e.n)} (${esc(side)}) muss raus`:e.t==='info'||e.t==='chance'?esc(e.txt)+(e.t==='chance'?` (${esc(side)})`:''):`${esc(e.n)} (${esc(side)})`;
+  const txt=e.t==='goal'?`<b>${esc(e.n)}</b>${e.pen?' (Elfmeter)':''} (${esc(side)}) · ${e.sc}`:e.t==='sub'?`${esc(e.n)} für ${esc(e.out)} (${esc(side)})`:e.t==='inj'?`${esc(e.n)} (${esc(side)}) muss raus${e.ty?': '+esc(e.ty):''}`:e.t==='info'||e.t==='chance'?esc(e.txt)+(e.t==='chance'?` (${esc(side)})`:''):`${esc(e.n)} (${esc(side)})`;
   return `<li><span class="m">${e.min}'</span><span class="ev ${lab[0]}">${lab[1]}</span><span>${txt}</span></li>`;
 }
 function kraft(m,s){const on=m.on[s];return on.length?Math.round(on.reduce((a,id)=>a+P(id).fit,0)/on.length):0}
@@ -1292,14 +1393,24 @@ function renderTicker(){
   const r=TK.live;const ov=$('#ov');
   const run=r.matches.filter(m=>!m.done);const clock=r.fin?'Ende':(run.length?Math.max(...run.map(m=>m.min)):90)+"'";
   const hm=r.matches.map((m,i)=>[m,i]).filter(([m])=>humanInMatch(m));
-  const cards=hm.map(([m])=>{const fl=m.lastGoal===m.min&&!r.fin?' flash':'';return `<div class="sb"><div class="sb-top"><div class="t r">${tname(m.hid)}</div><div class="sb-score${fl}">${m.gh}:${m.ga}</div><div class="t">${tname(m.aid)}</div></div><div class="sb-meta">${m.done?(m.pen?`i. E. ${m.pen[0]}:${m.pen[1]} · `:'')+'Abpfiff':m.min+'. Minute'}${m.min>90&&!m.done?' · Verlängerung':''} · Kraft ${kraft(m,0)} % : ${kraft(m,1)} %</div><ul class="feed">${m.ev.slice().reverse().slice(0,12).map(e=>evLine(e,m)).join('')||'<li class="dim small">Anpfiff …</li>'}</ul></div>`}).join('');
+  const cards=hm.map(([m])=>{const fl=m.lastGoal===m.min&&!r.fin?' flash':'';return `<div class="sb"><div class="sb-top"><div class="t r">${tname(m.hid)}</div><div class="sb-score${fl}">${m.gh}:${m.ga}</div><div class="t">${tname(m.aid)}</div></div><div class="sb-meta">${m.done?(m.pen?`i. E. ${m.pen[0]}:${m.pen[1]} · `:'')+'Abpfiff':m.min+'. Minute'}${m.min>90&&!m.done?' · Verlängerung':''} · Kraft ${kraft(m,0)} % : ${kraft(m,1)} %<br>${m.derby?'<span class="tag sus">DERBY</span> ':''}${WX[m.wx||'sonnig'].i} ${WX[m.wx||'sonnig'].l}</div><ul class="feed">${m.ev.slice().reverse().slice(0,12).map(e=>evLine(e,m)).join('')||'<li class="dim small">Anpfiff …</li>'}</ul></div>`}).join('');
   const others=r.matches.filter(m=>!humanInMatch(m));
   const grp=comp=>others.filter(m=>m.comp===comp).map(m=>`<div class="fx${m.lastGoal===m.min&&!r.fin?' flash':''}"><div class="h">${tname(m.hid,true)}</div><div class="s">${m.gh}:${m.ga}${m.pen?'*':''}</div><div class="a">${tname(m.aid,true)}</div></div>`).join('');
   let listHTML='';
-  if(r.comp==='LIGA'){const a=grp('L1'),b=grp('L2');listHTML=(a?`<div class="lbl">Bundesliga</div><div class="conf">${a}</div>`:'')+(b?`<div class="lbl">2. Bundesliga</div><div class="conf">${b}</div>`:'')}else{const a=grp(r.comp);listHTML=a?`<div class="lbl">Weitere Spiele</div><div class="conf">${a}</div>`:''}
+  if(r.comp==='LIGA'||r.comp==='NACH'){const a=grp('L1'),b=grp('L2');listHTML=(a?`<div class="lbl">Bundesliga</div><div class="conf">${a}</div>`:'')+(b?`<div class="lbl">2. Bundesliga</div><div class="conf">${b}</div>`:'')}else{const a=grp(r.comp);listHTML=a?`<div class="lbl">Weitere Spiele</div><div class="conf">${a}</div>`:''}
   const sp=S.settings.speed;
   const ctl=r.fin?`<button class="btn pri big" data-act="tkNext">Weiter ▸</button>`:TK.ht?'':`<div class="seg">${[['langsam','Langsam'],['normal','Normal'],['schnell','Schnell']].map(([k,l])=>`<button data-act="tkSpeed" data-k="${k}" class="${sp===k?'on':''}">${l}</button>`).join('')}</div><button class="btn" data-act="tkPause">Pause / Wechsel</button><button class="btn" data-act="tkSkip">Zum Ergebnis</button>`;
-  ov.innerHTML=`<div class="ov-in"><div class="tk-head"><div><div class="lbl">Konferenz · ${yearLabel()}</div><h1>${esc(r.label)}</h1></div><div style="text-align:right"><div class="clock">${clock}</div>${muteBtn()}</div></div><div class="row">${ctl}</div>${TK.scene?'<canvas id="scene" class="stadium" width="160" height="72" style="aspect-ratio:160/72;cursor:pointer" data-act="sceneSkip" aria-label="Torszene"></canvas>':''}${TK.ht?htPanel(hm):''}<div class="grid">${cards}</div>${listHTML}</div>`;
+  ov.innerHTML=`<div class="ov-in"><div class="tk-head"><div><div class="lbl">Konferenz · ${yearLabel()}</div><h1>${esc(r.label)}</h1></div><div style="text-align:right"><div class="clock">${clock}</div>${muteBtn()}</div></div><div class="row">${TK.dec?'':ctl}</div>${TK.dec?decPanel():''}${TK.scene?'<canvas id="scene" class="stadium" width="160" height="72" style="aspect-ratio:160/72;cursor:pointer" data-act="sceneSkip" aria-label="Torszene"></canvas>':''}${TK.ht?htPanel(hm):''}<div class="grid">${cards}</div>${listHTML}</div>`;
+}
+function decPanel(){
+  const {m}=TK.dec;const d=m.pend||TK.dec;const s=d.s;const t=team(s?m.aid:m.hid);const sc=`${team(m.hid).short} ${m.gh}:${m.ga} ${team(m.aid).short} · ${m.min}. Minute`;
+  let title='',body='',btns='';
+  if(d.k==='pen'){title='Elfmeter!';body=`${esc(t.name)} bekommt einen Strafstoß. Wer schießt?`;btns=bestShooters(m,s).slice(0,5).map((p,i)=>`<button class="btn ${i===0?'pri':''}" data-act="decide" data-v="pen:${p.id}">${esc(p.n)} <span class="small">Schuss ${p.sk.SCH} · Form ${p.form.toFixed(1)}</span></button>`).join('')}
+  else if(d.k==='red'){title='Platzverweis';body=`${esc(d.name)} sieht Rot. ${esc(t.short)} spielt zu zehnt. Umstellen?`;btns=`<button class="btn pri" data-act="decide" data-v="redDef">Stürmer raus, Verteidiger rein</button><button class="btn" data-act="decide" data-v="redKeep">So weiterspielen</button>`}
+  else if(d.k==='inj'){title='Verletzung';body=`${esc(d.name)} muss raus. Wer kommt?`;const bn=benchOf(m,s).map(P).sort((a,b)=>(b.pos===d.role)-(a.pos===d.role)||effStr(b)-effStr(a)).slice(0,5);btns=bn.map((p,i)=>`<button class="btn ${i===0?'pri':''}" data-act="decide" data-v="inj:${p.id}">${p.pos} ${esc(p.n)} <span class="small">${p.str} · Kraft ${Math.round(p.fit)} %</span></button>`).join('')+`<button class="btn" data-act="decide" data-v="inj:0">Niemanden bringen</button>`}
+  else if(d.k==='push'){title='Rückstand!';body=`${esc(t.short)} liegt hinten. Alles nach vorne? Mehr Torgefahr, aber die Abwehr öffnet sich für Konter.`;btns=`<button class="btn pri" data-act="decide" data-v="allin">Alles nach vorne</button><button class="btn" data-act="decide" data-v="stay">Ruhig bleiben</button>`}
+  else if(d.k==='bus'){title='Knappe Führung';body=`${esc(t.short)} führt mit einem Tor. Hinten dicht machen?`;btns=`<button class="btn pri" data-act="decide" data-v="bus">Mauern</button><button class="btn" data-act="decide" data-v="stay">Weiter so</button>`}
+  return `<div class="ht"><h2>${title}</h2><p class="small dim" style="margin:0 0 6px">${esc(sc)}</p><p>${body}</p><div class="fxl">${btns}</div></div>`;
 }
 function htPanel(hm){
   let html='';
@@ -1493,6 +1604,9 @@ const ACT={
   focus:d=>{const p=P(+d.id);p.tf=d.k||null;const t=team(p.tid);if(t&&t.tfMode&&t.tfMode!=='none')t.tfMode='manual';playerModal(p.id);render()},
   tfAll:d=>{const t=curTeam();if(d.k==='none'){t.tfMode=null;for(const id of t.squad)P(id).tf=null;toast('Alle trainieren allgemein.')}else{t.tfMode=d.k;applyTfMode(t);toast(d.k==='weak'?'Jeder Spieler arbeitet an seiner Schwäche.':'Jeder Spieler baut seine Kernstärke aus.')}render()},
   setBonus:d=>{curTeam().bonus=+d.v;render()},
+  setCap:d=>{const t=curTeam();t.cap=+d.id;toast(P(t.cap).n+' ist neuer Kapitän.');playerModal(t.cap);render()},
+  fitspritze:d=>{const p=P(+d.id);p.inj=0;p.risk=4;toast(p.n+' ist spielbereit, aber angeschlagen.');playerModal(p.id);render()},
+  decSet:d=>{S.settings.dec=d.v==='1';render()},
   setAutoXI:d=>{cur().autoXI=d.v==='1';render()},
   setMerch:d=>{curTeam().merch=+d.v;render()},
   sceneSet:d=>{S.settings.scenes=d.v==='1';render()},
@@ -1513,7 +1627,7 @@ const ACT={
   player:(d,el,e)=>{e&&e.preventDefault();UI.confirm=null;playerModal(+d.id)},
   extend:d=>{const p=P(+d.id);const y=+d.y;p.sal=Math.round(pSalary(p)*1.15/5)*5;p.con=y+1;closeModal();toast(`${p.n} verlängert bis ${S.year+p.con}.`);render()},
   list:d=>{const p=P(+d.id);p.listed=!p.listed;if(!$('#modal').hidden)playerModal(p.id);render()},
-  sellNow:d=>{const p=P(+d.id),t=curTeam();if(t.squad.length<=16)return toast('Mindestens 16 Spieler müssen im Kader bleiben.');
+  sellNow:d=>{const p=P(+d.id),t=curTeam();if(!windowOpen())return toast(windowText());if(t.squad.length<=16)return toast('Mindestens 16 Spieler müssen im Kader bleiben.');
     const buyers=domestic().filter(x=>x.human<0&&x.squad.length<28);const b=pick(buyers);const amt=Math.round(pValue(p)*.6/10)*10;transferPlayer(p,b.id,amt);UI.confirm=null;closeModal();toast(`${p.n} wechselt zu ${b.name}.`);addNews(S.turn,'Verkauf',`${p.n} geht für ${money(amt)} zu ${b.name}.`);render()},
   release:d=>{const p=P(+d.id),t=curTeam();if(t.squad.length<=16)return toast('Mindestens 16 Spieler müssen im Kader bleiben.');const sev=Math.round(p.sal*p.con*.5);book(t,-sev,'other');releasePlayer(p);UI.confirm=null;closeModal();toast(`${p.n} wurde entlassen.`);render()},
   setForm:d=>{curTeam().tactic.form=d.f;render()},
@@ -1527,6 +1641,7 @@ const ACT={
   buyModal:d=>{UI.buyY=2;buyModal(+d.id)},
   buyY:d=>{UI.buyY=+d.y;buyModal(+d.id)},
   buy:d=>tryBuy(+d.id,+d.f),
+  auction:d=>tryBuy(+d.id,+d.f,true),
   build:d=>{const t=curTeam(),b=BUILD[d.k];if(t.cash-b.cost<-3000)return toast('Nicht genug Geld für dieses Projekt.');book(t,-b.cost,'build');t.build.push({k:d.k,left:b.weeks});toast(`Baubeginn: ${b.label}`);render()},
   youthUp:()=>{const t=curTeam(),c=t.youthLvl*600;if(t.cash-c<-2000)return toast('Nicht genug Geld.');book(t,-c,'build');t.youthLvl++;toast(`Jugendabteilung jetzt Stufe ${t.youthLvl}.`);render()},
   promote:d=>{const t=curTeam(),p=P(+d.id);if(t.squad.length>=30)return toast('Kader voll.');t.youth=t.youth.filter(i=>i!==p.id);p.yth=false;p.con=3;p.sal=pSalary(p);t.squad.push(p.id);toast(`${p.n} erhält einen Profivertrag.`);render()},
@@ -1544,6 +1659,12 @@ const ACT={
   tkNext:()=>{TK.ri++;TK.live=null;nextRound()},
   htStyle:d=>{const m=TK.live.matches[+d.m];m.style[+d.s]=d.v;m.str[+d.s]=null;renderTicker()},
   htSub:d=>{const m=TK.live.matches[+d.m],s=+d.s;const o=+$(`#ht-out-${d.m}-${s}`).value,i=+$(`#ht-in-${d.m}-${s}`).value;if(!subst(m,s,o,i))toast('Wechsel nicht möglich.');renderTicker()},
+  decide:d=>{const dc=TK.dec;if(!dc)return;const m=dc.m;const p=m.pend;const v=d.v;
+    if(p&&p.k==='pen'){m.pend=null;takePenalty(m,p.s,+v.split(':')[1])}
+    else if(p&&p.k==='inj'){m.pend=null;const id=+v.split(':')[1];if(id&&benchOf(m,p.s).includes(id)){m.on[p.s].push(id);m.role[p.s][id]=p.role;m.played[p.s].add(id);m.used[p.s]++;m.str[p.s]=null;addEv(m,p.s,'sub',P(id),{out:p.name})}}
+    else if(p&&p.k==='red'){m.pend=null;if(v==='redDef'){const out=m.on[p.s].map(P).filter(x=>(m.role[p.s][x.id]||x.pos)==='ST').sort((a,b)=>a.fit-b.fit)[0]||m.on[p.s].map(P).filter(x=>(m.role[p.s][x.id]||x.pos)==='MF').sort((a,b)=>a.fit-b.fit)[0];const inn=benchOf(m,p.s).map(P).filter(x=>x.pos==='AB').sort((a,b)=>effStr(b)-effStr(a))[0];if(out&&inn){subst(m,p.s,out.id,inn.id);m.role[p.s][inn.id]='AB'}}}
+    else if(dc.k==='push'||dc.k==='bus'){if(v!=='stay'){m.style[dc.s]=v;m.str[dc.s]=null;addEv(m,dc.s,'info',null,{txt:v==='allin'?`${team(dc.s?m.aid:m.hid).short} wirft alles nach vorne`:`${team(dc.s?m.aid:m.hid).short} zieht sich zurück und mauert`})}}
+    TK.dec=null;renderTicker();startTimer()},
   htGo:()=>{TK.ht=false;TK.scene=null;sndWhistle([.7]);renderTicker();startTimer()},
   mute:()=>{sndInit();const any=SND.on.music||SND.on.sfx;SND.on.music=SND.on.sfx=!any;sndSave();sndApplyMode();render();if(TK&&TK.live)renderTicker()},
   sndSet:d=>{sndInit();SND.on[d.k]=d.v==='1';sndSave();sndApplyMode();render()},
@@ -1560,6 +1681,18 @@ function resolveNews(id,k){
     case 'fanN':t.fans=clamp(t.fans-2,5,99);n.res='Die Fans protestieren mit Spruchbändern.';break;
     case 'bidY':{const p=P(d.pid);if(p&&p.tid===t.id&&t.squad.length>16){transferPlayer(p,d.tid,d.amount);n.res=`${p.n} wechselt für ${money(d.amount)} zu ${team(d.tid).name}.`}else n.res='Transfer nicht mehr möglich.';break}
     case 'bidN':n.res='Angebot abgelehnt.';break;
+    case 'poachN':{const p=P(d.pid);if(p&&p.tid===t.id){ensureP(p);p.mood=clamp(p.mood-(p.ch==='diva'?15:6),0,100)}n.res='Abgelehnt. Der Spieler ist enttäuscht.';break}
+    case 'moodTalk':{const p=P(d.pid);if(p&&p.tid===t.id){p.sal=Math.round(p.sal*1.1);p.mood=clamp(p.mood+22,0,100)}n.res='Das Gespräch hat geholfen.';break}
+    case 'moodList':{const p=P(d.pid);if(p&&p.tid===t.id){p.listed=true;p.mood=clamp(p.mood+10,0,100)}n.res='Er steht jetzt auf der Transferliste.';break}
+    case 'moodIgnore':{const p=P(d.pid);if(p&&p.tid===t.id){p.mood=clamp(p.mood-5,0,100);p.form=clamp(p.form-1,1,10)}n.res='Die Stimmung wird nicht besser.';break}
+    case 'scFine':{const p=P(d.pid);book(t,25,'other');if(p){ensureP(p);p.mood=clamp(p.mood-10,0,100)}n.res='25 TDM Geldstrafe verhängt.';break}
+    case 'scSusp':{const p=P(d.pid);if(p&&p.tid===t.id){p.sus=Math.max(p.sus,2);p.mood=clamp(p.mood-20,0,100)}S.humans[S.turn].conf=clamp(S.humans[S.turn].conf+2,0,100);n.res='Suspendiert. Der Vorstand begrüßt die klare Linie.';break}
+    case 'scIgnore':S.humans[S.turn].conf=clamp(S.humans[S.turn].conf-2,0,100);t.fans=clamp(t.fans-1,5,99);n.res='Die Presse spricht von Führungsschwäche.';break;
+    case 'pcBold':t.press={wk:S.week,k:'bold',opp:d.opp};n.res='Kampfansage. Mehr Zuschauer, aber eine Niederlage wird teuer.';break;
+    case 'pcHot':t.press={wk:S.week,k:'hot',opp:d.opp};n.res='Die Mannschaft ist heiß (+2 % Stärke im Spiel).';break;
+    case 'pcResp':t.press={wk:S.week,k:'resp',opp:d.opp};n.res='Sachliche Worte, keine Risiken.';break;
+    case 'dlBuy':{const p=P(d.pid);if(!p||!p.tid||team(p.tid).human>=0){n.res='Hat sich erledigt.';break}if(t.squad.length>=30){n.res='Kader voll.';break}if(t.cash-d.amount<-2000){n.res='Nicht genug Geld.';break}const from=team(p.tid).name;transferPlayer(p,t.id,d.amount);p.sal=wageDemand(p);p.con=2;n.res=`${p.n} kommt von ${from}.`;break}
+    case 'dlNo':n.res='Abgelehnt.';break;
   }
   n.done=true;render();
 }
