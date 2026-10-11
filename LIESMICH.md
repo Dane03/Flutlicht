@@ -13,28 +13,18 @@ Saison 1994/95 mit allen Klubs der Bundesliga und 2. Bundesliga. Eigenständige 
 
 Offline-Modus und Installation brauchen eine HTTPS-Adresse (Ausnahme: `localhost` auf demselben Rechner). Über `http://192.168.x.x` im WLAN läuft das Spiel zwar, aber nicht offline.
 
-## Variante A: Mac mini mit Tailscale (empfohlen, privat)
+## Hosting auf dem Mac mini (Tailscale)
 
-Das Spiel enthält echte Vereins- und Spielernamen. Für den privaten Gebrauch ist das unproblematisch; eine öffentlich erreichbare Seite solltest du damit nicht betreiben.
-
-Mac und iPhone im selben Tailnet:
+Tailscale läuft dort schon für andere Apps. Damit deren Freigabe auf Port 443 erhalten bleibt, bekommt Flutlicht einen eigenen HTTPS-Port:
 
 ```
-cd ~/flutlicht-app
-python3 -m http.server 8080
-tailscale serve --bg 8080
+tailscale serve status
+tailscale serve --bg --https=8443 ~/flutlicht-app
 ```
 
-`tailscale serve` zeigt die HTTPS-Adresse (`https://<macmini>.<tailnet>.ts.net/`), die nur in deinem Tailnet erreichbar ist. Nur auf dem Mac selbst reicht `http://localhost:8080`.
+Danach: `https://<macmini>.<tailnet>.ts.net:8443/`. Mit `--bg` bleibt die Freigabe auch nach einem Neustart aktiv. Ist 8443 belegt, nimm 10000.
 
-## Variante B: GitHub Pages
-
-Achtung: GitHub-Pages-Seiten sind öffentlich, und die echten Namen stecken in `index.html` selbst (der Editor ändert nur deinen Spielstand). Für diese Variante besser die Version mit erfundenen Vereinen verwenden.
-
-1. Neues Repository anlegen, z. B. `flutlicht`.
-2. Den Inhalt dieses Ordners hochladen (`index.html` liegt im Hauptverzeichnis).
-3. Settings → Pages → Branch `main`, Ordner `/ (root)` → Save.
-4. Nach ein bis zwei Minuten: `https://<dein-name>.github.io/flutlicht/`
+Das Spiel enthält echte Vereins- und Spielernamen. Für den privaten Gebrauch im Tailnet ist das unproblematisch; eine öffentliche Seite (z. B. GitHub Pages bei einem öffentlichen Repo) solltest du damit nicht betreiben.
 
 ## Installieren
 
@@ -44,6 +34,10 @@ Achtung: GitHub-Pages-Seiten sind öffentlich, und die echten Namen stecken in `
 
 Einmal online öffnen, danach läuft das Spiel offline.
 
+## Ton
+
+Im Menü läuft eigene Chiptune-Musik, während der Spiele Stadionatmosphäre mit Gesängen, Klatschen, Torjubel und Schiedsrichterpfiff. Alles wird im Browser erzeugt, es gibt keine Audiodateien. Der Ton startet beim ersten Tippen (Browser-Vorgabe). ♪ oben rechts schaltet stumm.
+
 ## Spielstände
 
 - Automatisch nach jedem Spieltag gespeichert, zusätzlich drei Speicherplätze unter **System**.
@@ -52,4 +46,4 @@ Einmal online öffnen, danach läuft das Spiel offline.
 
 ## Updates
 
-Neue Version der Dateien hochladen und die App einmal online öffnen. Für ein sofortiges Update in `sw.js` die Zeile `const CACHE='flutlicht-v1'` hochzählen (`v2`, `v3` …).
+Neue Version der Dateien hochladen und die App einmal online öffnen. Für ein sofortiges Update in `sw.js` die Zeile `const CACHE='flutlicht-v2'` hochzählen.

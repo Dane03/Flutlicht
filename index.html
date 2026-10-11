@@ -21,6 +21,7 @@
   --bg:#101c58; --panel:#15247a; --panel2:#1b2e90; --deep:#0a1340; --line:#4660cf;
   --fg:#e9eeff; --dim:#a6b3e8; --hi:#ffd84a; --cyan:#64e0ff; --ink:#0b1440;
   --good:#74e6a2; --bad:#ff7d7d; --warn:#ffb54a;
+  --bevl:#8ea2ff; --bevd:#050a2c; --board:#05070f; --bulb:#ffcf2e;
   --f-disp:'VT323',ui-monospace,Menlo,Consolas,monospace;
   --f-body:'IBM Plex Sans Condensed','Arial Narrow',system-ui,sans-serif;
   color-scheme:dark;
@@ -42,7 +43,7 @@ h1,h2,h3{text-wrap:balance}
 .cash.neg{color:#9b0f1c}
 .menu{display:flex;gap:0;overflow-x:auto;background:var(--panel2);padding:0 8px;border-bottom:2px solid var(--line);scrollbar-width:none}
 .menu::-webkit-scrollbar{display:none}
-.menu button{background:none;border:0;padding:9px 10px 7px;font-weight:600;font-size:14px;color:var(--dim);white-space:nowrap;cursor:pointer;border-bottom:3px solid transparent}
+.menu button{background:none;border:0;padding:6px 10px 4px;font-family:var(--f-disp);font-weight:400;font-size:21px;letter-spacing:.03em;color:var(--dim);white-space:nowrap;cursor:pointer;border-bottom:3px solid transparent}
 .menu button:hover{color:var(--fg)}
 .menu button.on{color:var(--hi);border-bottom-color:var(--hi)}
 .menu button .dot{display:inline-block;width:7px;height:7px;background:var(--hi);border-radius:50%;margin-left:4px;vertical-align:2px}
@@ -50,9 +51,11 @@ main{padding:16px;padding-bottom:calc(96px + env(safe-area-inset-bottom,0px));ma
 .endbar{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--panel2);border-top:2px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:12px}
 .endbar .info{flex:1;min-width:0;font-size:13px;color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .endbar .info b{color:var(--fg)}
-.btn{background:var(--panel2);border:2px solid var(--line);padding:7px 13px;cursor:pointer;font-weight:600;border-radius:2px;white-space:nowrap}
-.btn:hover{border-color:var(--cyan)}
-.btn.pri{background:var(--hi);color:var(--ink);border-color:var(--hi)}
+.btn{background:var(--panel2);border:3px solid;border-color:var(--bevl) var(--bevd) var(--bevd) var(--bevl);padding:6px 13px;cursor:pointer;font-weight:600;border-radius:0;white-space:nowrap}
+.btn:hover{background:var(--line)}
+.btn:active{border-color:var(--bevd) var(--bevl) var(--bevl) var(--bevd)}
+.btn.pri{background:var(--hi);color:var(--ink);border-color:#fff3b0 #8a6a00 #8a6a00 #fff3b0}
+.btn.pri:active{border-color:#8a6a00 #fff3b0 #fff3b0 #8a6a00}
 .btn.pri:hover{filter:brightness(1.08)}
 .btn.big{font-family:var(--f-disp);font-size:24px;font-weight:400;padding:4px 18px;line-height:1.2}
 .btn.sm{padding:3px 9px;font-size:13px}
@@ -63,8 +66,8 @@ main{padding:16px;padding-bottom:calc(96px + env(safe-area-inset-bottom,0px));ma
 .seg button{background:var(--deep);border:0;padding:6px 11px;cursor:pointer;font-weight:600;font-size:14px}
 .seg button+button{border-left:2px solid var(--line)}
 .seg button.on{background:var(--hi);color:var(--ink)}
-.panel{background:var(--panel);border:3px double var(--line);margin-bottom:16px;min-width:0}
-.panel>h2{margin:0;background:var(--line);color:#fff;font-family:var(--f-disp);font-weight:400;font-size:23px;line-height:1.15;padding:3px 12px;letter-spacing:.03em;display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.panel{background:var(--panel);border:3px solid;border-color:var(--bevl) var(--bevd) var(--bevd) var(--bevl);box-shadow:inset 0 0 0 1px var(--line);margin-bottom:16px;min-width:0}
+.panel>h2{margin:0;background:linear-gradient(90deg,var(--line),var(--panel2));color:#fff;font-family:var(--f-disp);font-weight:400;font-size:23px;line-height:1.15;padding:3px 12px;letter-spacing:.03em;display:flex;justify-content:space-between;gap:8px;align-items:baseline}
 .panel>h2 small{font-family:var(--f-body);font-size:13px;font-weight:600;color:var(--fg);opacity:.85;letter-spacing:0}
 .bd{padding:12px}
 .grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr))}
@@ -123,11 +126,12 @@ tr.zone-down td:first-child{box-shadow:inset 4px 0 var(--bad)}
 .tk-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;border-bottom:3px double var(--line);padding-bottom:8px}
 .tk-head h1{margin:0;font-family:var(--f-disp);font-weight:400;font-size:34px;line-height:1}
 .clock{font-family:var(--f-disp);font-size:64px;line-height:.85;color:var(--hi);font-variant-numeric:tabular-nums}
-.sb{background:var(--deep);border:3px double var(--hi);padding:10px 12px}
+.sb{background:var(--board);background-image:radial-gradient(rgba(255,255,255,.06) 1px,transparent 1.4px);background-size:5px 5px;border:4px solid;border-color:#3a3f55 #000 #000 #3a3f55;padding:10px 12px}
+.sb-score{text-shadow:0 0 10px rgba(255,207,46,.55)}
 .sb-top{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center}
 .sb-top .t{font-weight:700;font-size:17px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sb-top .t.r{text-align:right}
-.sb-score{font-family:var(--f-disp);font-size:56px;line-height:.9;color:var(--hi);letter-spacing:.04em}
+.sb-score{font-family:var(--f-disp);font-size:56px;line-height:.9;color:var(--bulb);letter-spacing:.04em}
 .sb-meta{text-align:center;font-size:12px;color:var(--dim);margin-top:2px}
 .feed{list-style:none;margin:8px 0 0;padding:0;font-size:14px;display:flex;flex-direction:column;gap:3px;max-height:220px;overflow:auto}
 .feed li{display:flex;gap:8px;align-items:baseline}
@@ -146,6 +150,8 @@ tr.zone-down td:first-child{box-shadow:inset 4px 0 var(--bad)}
 .ng-title{font-family:var(--f-disp);font-size:clamp(54px,13vw,112px);line-height:.82;margin:0;color:var(--hi);text-shadow:4px 4px 0 var(--ink);letter-spacing:.02em}
 .ng-title span{display:block;color:var(--cyan)}
 .ng-sub{color:var(--dim);max-width:60ch;margin:6px 0 0}
+.stadium{width:100%;max-width:720px;aspect-ratio:160/56;image-rendering:pixelated;border:4px solid;border-color:var(--bevl) var(--bevd) var(--bevd) var(--bevl);display:block;margin-bottom:12px;background:var(--deep)}
+.mute{margin-left:8px;background:var(--ink);color:var(--cyan);border:2px solid var(--panel2);font-family:var(--f-disp);font-size:18px;line-height:1;padding:2px 8px;cursor:pointer}
 .floods{display:flex;gap:18px;margin-bottom:6px}
 .floods i{width:46px;height:20px;background:repeating-linear-gradient(90deg,var(--hi) 0 6px,var(--deep) 6px 8px);border:2px solid var(--ink);box-shadow:0 0 22px rgba(255,216,74,.45)}
 .ngrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));gap:10px;padding:10px 0;border-top:1px solid rgba(70,96,207,.4)}
@@ -703,10 +709,10 @@ function closeModal(){$('#modal').hidden=true;$('#modal').innerHTML=''}
 function pendingCount(){const h=cur();if(!h)return 0;return (S.news[S.turn]||[]).filter(n=>n.acts&&!n.done).length+(curTeam()&&curTeam().offers?1:0)}
 
 function render(){
-  if(!S){$('#top').innerHTML=`<div class="brand">FLUTLICHT <span>MANAGER</span></div>`;$('#menu').hidden=true;$('#endbar').hidden=true;$('#main').innerHTML=viewNewGame();return}
+  if(!S){$('#top').innerHTML=`<div class="brand">FLUTLICHT <span>MANAGER</span></div><div style="margin-left:auto">${muteBtn()}</div>`;$('#menu').hidden=true;$('#endbar').hidden=true;$('#main').innerHTML=viewNewGame();drawStadium();return}
   $('#menu').hidden=false;$('#endbar').hidden=false;
   const h=cur(),t=curTeam();
-  $('#top').innerHTML=`<div class="brand">FLUTLICHT <span>MANAGER</span></div><div class="meta">${yearLabel()} · ${S.week<=34?S.week+'. Spieltag':'Saisonende'}<br>${esc(h.name)}${t?' · '+esc(t.name):' · ohne Verein'}</div>${t?`<div class="cash${t.cash<0?' neg':''}">${money(t.cash)}</div>`:''}`;
+  $('#top').innerHTML=`<div class="brand">FLUTLICHT <span>MANAGER</span></div><div class="meta">${yearLabel()} · ${S.week<=34?S.week+'. Spieltag':'Saisonende'}<br>${esc(h.name)}${t?' · '+esc(t.name):' · ohne Verein'}</div>${t?`<div class="cash${t.cash<0?' neg':''}">${money(t.cash)}</div>`:''}${muteBtn()}`;
   const pc=pendingCount();
   $('#menu').innerHTML=MENU.map(([k,l])=>`<button data-act="nav" data-v="${k}" class="${UI.view===k?'on':''}">${l}${k==='office'&&pc?'<span class="dot"></span>':''}</button>`).join('');
   const V={office:viewOffice,squad:viewSquad,tactics:viewTactics,training:viewTraining,table:viewTable,fixtures:viewFixtures,cup:()=>viewCup('POK'),eur:()=>viewCup('EUR'),market:viewMarket,finance:viewFinance,stadium:viewStadium,youth:viewYouth,stats:viewStats,editor:viewEditor,system:viewSystem};
@@ -733,7 +739,7 @@ function viewNewGame(){
   const n=UI.ng.n;let rows='';
   for(let i=0;i<n;i++)rows+=`<div class="ngrow"><label for="ng-name-${i}">Manager ${i+1}<input id="ng-name-${i}" value="${esc(UI.ng.names[i]||'Manager '+(i+1))}" maxlength="24"></label><label for="ng-club-${i}">Verein<select id="ng-club-${i}">${clubOptions(UI.ng.clubs[i]||19+i)}</select></label></div>`;
   const auto=lsGet('flm_auto');let am='';if(auto){try{am=JSON.parse(auto).meta}catch(e){}}
-  return `<section class="ng-hero"><div class="floods"><i></i><i></i><i></i></div><h1 class="ng-title">FLUTLICHT<span>MANAGER</span></h1>
+  return `<section class="ng-hero"><canvas id="stadium" class="stadium" width="160" height="56" aria-hidden="true"></canvas><h1 class="ng-title">FLUTLICHT<span>MANAGER</span></h1>
   <p class="ng-sub">Fußballmanager im Stil der DOS-Klassiker, Saison 1994/95: Bundesliga und 2. Bundesliga, Pokal, Europapokal, Stadionausbau, Sponsoren, Jugend, Transfers und Konferenz-Ticker. Bis zu vier Manager spielen abwechselnd an einem Gerät.</p></section>
   ${auto?`<div class="panel"><h2>Weiterspielen</h2><div class="bd row"><span class="dim">${esc(am)}</span><button class="btn pri" data-act="continue">Fortsetzen</button></div></div>`:''}
   <div class="panel"><h2>Neues Spiel</h2><div class="bd">
@@ -996,6 +1002,9 @@ function viewSystem(){
   return `<div class="grid"><div class="stack"><div class="panel"><h2>Spielstände</h2><div class="bd tw"><table><tbody>${slots}</tbody></table><p class="small dim">Nach jedem Spieltag wird automatisch gespeichert. Spielstände liegen auf diesem Gerät. Zum Umziehen sichere eine Datei (z. B. in iCloud Drive) und lade sie auf dem anderen Gerät.</p>
    <div class="row"><button class="btn" data-act="export">Exportieren</button><button class="btn" data-act="ngImport">Importieren</button><button class="btn" data-act="fileSave">Als Datei sichern</button><button class="btn" data-act="fileLoad">Aus Datei laden</button></div></div></div>
    <div class="panel"><h2>Einstellungen</h2><div class="bd"><div class="lbl">Tickertempo</div><div class="seg" style="margin:4px 0 12px">${[['langsam','Langsam'],['normal','Normal'],['schnell','Schnell'],['sofort','Nur Ergebnis']].map(([k,l])=>`<button data-act="speed" data-k="${k}" class="${sp===k?'on':''}">${l}</button>`).join('')}</div>
+   <div class="lbl">Musik im Menü</div><div class="seg" style="margin:4px 0 12px"><button data-act="sndSet" data-k="music" data-v="1" class="${SND.on.music?'on':''}">An</button><button data-act="sndSet" data-k="music" data-v="0" class="${!SND.on.music?'on':''}">Aus</button></div>
+   <div class="lbl">Fans und Pfiffe im Spiel</div><div class="seg" style="margin:4px 0 12px"><button data-act="sndSet" data-k="sfx" data-v="1" class="${SND.on.sfx?'on':''}">An</button><button data-act="sndSet" data-k="sfx" data-v="0" class="${!SND.on.sfx?'on':''}">Aus</button></div>
+   <label for="snd-vol" style="margin-bottom:12px">Lautstärke<input id="snd-vol" type="range" min="0" max="100" value="${Math.round(SND.vol*100)}" data-chg="vol" style="padding:0"></label>
    <div class="lbl">Halbzeitpause mit Wechseln</div><div class="seg" style="margin-top:4px"><button data-act="htSet" data-v="1" class="${S.settings.halftime?'on':''}">An</button><button data-act="htSet" data-v="0" class="${!S.settings.halftime?'on':''}">Aus</button></div>
    <div style="margin-top:16px">${UI.confirm==='new'?`<button class="btn danger" data-act="newGame">Ja, aktuelles Spiel beenden</button> <button class="btn" data-act="confirm" data-k="">Abbrechen</button>`:`<button class="btn danger" data-act="confirm" data-k="new">Neues Spiel</button>`}</div></div></div></div>
    <div class="panel help"><h2>Spielanleitung</h2><div class="bd">
@@ -1004,6 +1013,7 @@ function viewSystem(){
     <h3>Mannschaft</h3><p>Stärke, Form und Fitness bestimmen die Leistung. Junge Spieler wachsen bis zu ihrem Talent, ab etwa 30 Jahren baut man ab. Fünf Gelbe oder eine Rote Karte bedeuten eine Sperre.</p>
     <h3>Geld</h3><p>Einnahmen kommen aus Zuschauern, Fernsehen, Sponsor, Prämien und Verkäufen. Gehälter sind der größte Posten. Größere Stadien und faire Preise bringen mehr Zuschauer.</p>
     <h3>Vorstand</h3><p>Das Vertrauen steigt mit Siegen und einem Tabellenplatz über dem Ziel. Fällt es zu tief, wirst du entlassen und bekommst Angebote von anderen Klubs.</p>
+    <h3>Ton</h3><p>Im Menü läuft Musik, während der Spiele hörst du das Stadion. Der Ton startet beim ersten Tippen. Mit ♪ oben rechts schaltest du alles stumm, Details unter Einstellungen.</p>
     <h3>Auf- und Abstieg</h3><p>Die letzten drei der Bundesliga steigen ab, die ersten drei der 2. Bundesliga auf. Die ersten vier der Bundesliga spielen im Europapokal.</p>
    </div></div></div>`;
 }
@@ -1017,21 +1027,22 @@ function nextRound(){
   while(TK.ri<TK.rounds.length){
     const r=TK.rounds[TK.ri];
     if(S.settings.speed==='sofort'||!r.matches.some(humanInMatch)){for(const m of r.matches)while(!m.done)simMinute(m);finishRound(r);r.fin=true;TK.ri++;continue}
-    TK.live=r;TK.ht=false;TK.htDone=false;r.fin=false;$('#ov').hidden=false;renderTicker();startTimer();return;
+    TK.live=r;TK.ht=false;TK.htDone=false;r.fin=false;$('#ov').hidden=false;for(const m of r.matches)m._seen=0;sndMode('match');sndWhistle([1.1]);renderTicker();startTimer();return;
   }
-  endWeek(TK.rounds);showSummary();
+  endWeek(TK.rounds);sndMode('menu');showSummary();
 }
 function startTimer(){stopTimer();TK.timer=setInterval(tick,SPEED[S.settings.speed]||150)}
 function stopTimer(){if(TK&&TK.timer){clearInterval(TK.timer);TK.timer=null}}
 function tick(){
   const r=TK.live;if(!r)return;
   for(const m of r.matches)if(!m.done)simMinute(m);
+  sndEvents(r);
   const mins=r.matches.filter(m=>!m.done).map(m=>m.min);
-  if(S.settings.halftime&&!TK.htDone&&r.matches.some(m=>humanInMatch(m)&&m.min===45&&!m.done)){TK.htDone=true;TK.ht=true;stopTimer();renderTicker();return}
-  if(!mins.length){stopTimer();finishRound(r);r.fin=true}
+  if(S.settings.halftime&&!TK.htDone&&r.matches.some(m=>humanInMatch(m)&&m.min===45&&!m.done)){TK.htDone=true;TK.ht=true;stopTimer();sndWhistle([.55,.9]);renderTicker();return}
+  if(!mins.length){stopTimer();finishRound(r);r.fin=true;sndWhistle([.22,.22,1.2])}
   renderTicker();
 }
-function skipRound(){const r=TK.live;stopTimer();for(const m of r.matches)while(!m.done)simMinute(m);TK.ht=false;finishRound(r);r.fin=true;renderTicker()}
+function skipRound(){const r=TK.live;stopTimer();for(const m of r.matches)while(!m.done)simMinute(m);for(const m of r.matches)m._seen=m.ev.length;TK.ht=false;finishRound(r);r.fin=true;sndWhistle([.22,.22,1.2]);renderTicker()}
 function evLine(e,m){
   const side=e.s>=0?team(e.s?m.aid:m.hid).short:'';
   const lab={goal:['goal','TOR'],yel:['yel','GELB'],red:['red',e.gr?'G-ROT':'ROT'],inj:['inj','VERL.'],sub:['sub','WECHSEL'],info:['info','INFO']}[e.t];
@@ -1049,7 +1060,7 @@ function renderTicker(){
   if(r.comp==='LIGA'){const a=grp('L1'),b=grp('L2');listHTML=(a?`<div class="lbl">Bundesliga</div><div class="conf">${a}</div>`:'')+(b?`<div class="lbl">2. Bundesliga</div><div class="conf">${b}</div>`:'')}else{const a=grp(r.comp);listHTML=a?`<div class="lbl">Weitere Spiele</div><div class="conf">${a}</div>`:''}
   const sp=S.settings.speed;
   const ctl=r.fin?`<button class="btn pri big" data-act="tkNext">Weiter ▸</button>`:TK.ht?'':`<div class="seg">${[['langsam','Langsam'],['normal','Normal'],['schnell','Schnell']].map(([k,l])=>`<button data-act="tkSpeed" data-k="${k}" class="${sp===k?'on':''}">${l}</button>`).join('')}</div><button class="btn" data-act="tkPause">Pause / Wechsel</button><button class="btn" data-act="tkSkip">Zum Ergebnis</button>`;
-  ov.innerHTML=`<div class="ov-in"><div class="tk-head"><div><div class="lbl">Konferenz · ${yearLabel()}</div><h1>${esc(r.label)}</h1></div><div class="clock">${clock}</div></div><div class="row">${ctl}</div>${TK.ht?htPanel(hm):''}<div class="grid">${cards}</div>${listHTML}</div>`;
+  ov.innerHTML=`<div class="ov-in"><div class="tk-head"><div><div class="lbl">Konferenz · ${yearLabel()}</div><h1>${esc(r.label)}</h1></div><div style="text-align:right"><div class="clock">${clock}</div>${muteBtn()}</div></div><div class="row">${ctl}</div>${TK.ht?htPanel(hm):''}<div class="grid">${cards}</div>${listHTML}</div>`;
 }
 function htPanel(hm){
   let html='';
@@ -1072,6 +1083,143 @@ function showSummary(){
 function showHandover(){
   const h=cur();const ov=$('#ov');ov.hidden=false;
   ov.innerHTML=`<div class="ov-in" style="min-height:70vh;justify-content:center;align-items:flex-start"><div class="lbl">Manager ${S.turn+1} von ${S.humans.length}</div><h1 class="ng-title" style="font-size:clamp(44px,10vw,84px)">${esc(h.name)}<span style="font-size:.5em">${h.tid?esc(team(h.tid).name):'ohne Verein'}</span></h1><p class="dim">Gerät weitergeben. Die anderen schauen weg.</p><button class="btn pri big" data-act="handoverGo">Übernehmen ▸</button></div>`;
+}
+
+
+/* =========================== SOUND =========================== */
+/* Eigene Komposition und synthetische Geräusche, alles per Web Audio erzeugt. */
+const SND={ctx:null,on:{music:true,sfx:true},vol:.7,mode:'menu',seqT:null,step:0,next:0,crowd:null,crowdT:null,chantAt:0,lastChime:0};
+function sndLoad(){try{const d=JSON.parse(lsGet('flm_audio')||'{}');if(d.on)SND.on=Object.assign(SND.on,d.on);if(typeof d.vol==='number')SND.vol=d.vol}catch(e){}}
+function sndSave(){lsSet('flm_audio',JSON.stringify({on:SND.on,vol:SND.vol}))}
+function muteBtn(){const on=SND.on.music||SND.on.sfx;return `<button class="mute" data-act="mute" aria-label="${on?'Ton aus':'Ton an'}" title="${on?'Ton aus':'Ton an'}">♪ ${on?'AN':'AUS'}</button>`}
+function sndInit(){
+  if(SND.ctx){if(SND.ctx.state==='suspended')SND.ctx.resume();return}
+  const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
+  let c;try{c=new AC()}catch(e){return}
+  SND.ctx=c;SND.master=c.createGain();SND.master.gain.value=SND.vol;SND.master.connect(c.destination);
+  const comp=c.createDynamicsCompressor();comp.threshold.value=-14;comp.ratio.value=4;comp.connect(SND.master);
+  SND.mus=c.createGain();SND.mus.gain.value=0;SND.mus.connect(comp);
+  SND.fx=c.createGain();SND.fx.gain.value=1;SND.fx.connect(comp);
+  const n=c.sampleRate*3,w=c.createBuffer(1,n,c.sampleRate),b=c.createBuffer(1,n,c.sampleRate),wd=w.getChannelData(0),bd=b.getChannelData(0);let last=0;
+  for(let i=0;i<n;i++){const x=Math.random()*2-1;wd[i]=x;last=(last+.02*x)/1.02;bd[i]=last*3.5}
+  SND.noise=w;SND.brown=b;
+  sndApplyMode();
+}
+function sndMode(m){SND.mode=m;sndApplyMode()}
+function sndApplyMode(){
+  const c=SND.ctx;if(!c)return;const t=c.currentTime;
+  const wantM=SND.on.music&&SND.mode==='menu';
+  SND.mus.gain.cancelScheduledValues(t);SND.mus.gain.setTargetAtTime(wantM?1:0,t,.35);
+  if(wantM&&!SND.seqT){SND.next=c.currentTime+.08;SND.seqT=setInterval(seqTick,25)}
+  if(!wantM&&SND.seqT){setTimeout(()=>{if(!(SND.on.music&&SND.mode==='menu')&&SND.seqT){clearInterval(SND.seqT);SND.seqT=null}},1600)}
+  if(SND.on.sfx&&SND.mode==='match')crowdStart();else crowdStop();
+}
+const NOTE=n=>{const m=/^([A-G])(#?)(\d)$/.exec(n);const k={C:0,D:2,E:4,F:5,G:7,A:9,B:11}[m[1]]+(m[2]?1:0)+12*(+m[3]+1);return 440*Math.pow(2,(k-69)/12)};
+const CHORD={Am:['A2','A3','C4','E4'],F:['F2','F3','A3','C4'],C:['C3','C4','E4','G4'],G:['G2','G3','B3','D4'],Em:['E2','E3','G3','B3'],Dm:['D3','D4','F4','A4']};
+const SONG=(()=>{
+  const A=[['Am','E5:4 A5:2 G5:2 E5:4 D5:2 C5:2'],['F','C5:4 F5:4 E5:2 D5:2 C5:4'],['C','G4:2 C5:2 E5:4 G5:4 E5:4'],['G','D5:6 B4:2 G4:4 -:4']];
+  const A2=[['Am','E5:4 A5:2 G5:2 E5:4 D5:2 C5:2'],['F','C5:4 F5:4 E5:2 D5:2 C5:4'],['C','G4:2 C5:2 E5:4 G5:2 A5:2 G5:4'],['G','B5:6 A5:2 G5:4 D5:4']];
+  const B=[['F','A5:4 G5:2 F5:2 E5:4 F5:4'],['G','G5:4 F5:2 E5:2 D5:4 B4:4'],['Em','E5:2 G5:2 B5:4 A5:4 G5:4'],['Am','A5:8 E5:4 -:4']];
+  const B2=[['Dm','F5:4 E5:2 D5:2 A5:4 F5:4'],['G','G5:4 A5:2 B5:2 D6:4 B5:4'],['C','C6:6 B5:2 G5:4 E5:4'],['G','D5:4 G5:4 B5:4 -:4']];
+  return [...A,...A2,...B,...B2].map(([ch,mel])=>{const m={};let st=0;for(const tok of mel.split(' ')){const [nn,l]=tok.split(':');if(nn!=='-')m[st]=[NOTE(nn),+l];st+=+l}return {ch,m}});
+})();
+const STEP=60/124/4;
+function seqTick(){const c=SND.ctx;while(SND.next<c.currentTime+.12){playStep(SND.step,SND.next);SND.next+=STEP;SND.step=(SND.step+1)%(16*SONG.length)}}
+function tone(type,f,t,dur,g,dest,att){const c=SND.ctx;const o=c.createOscillator(),a=c.createGain();o.type=type;o.frequency.value=f;a.gain.setValueAtTime(0,t);a.gain.linearRampToValueAtTime(g,t+(att||.005));a.gain.setTargetAtTime(0,t+dur*.75,dur*.2+.01);o.connect(a);a.connect(dest);o.start(t);o.stop(t+dur+.4);return o}
+function noiseHit(t,dur,g,type,freq,dest,q,buf){const c=SND.ctx;const s=c.createBufferSource();s.buffer=buf||SND.noise;const f=c.createBiquadFilter();f.type=type;f.frequency.value=freq;f.Q.value=q||1;const a=c.createGain();a.gain.setValueAtTime(g,t);a.gain.exponentialRampToValueAtTime(.0008,t+dur);s.connect(f);f.connect(a);a.connect(dest);s.start(t,Math.random()*2);s.stop(t+dur+.05)}
+function kick(t,g,dest){const c=SND.ctx;const o=c.createOscillator(),a=c.createGain();o.frequency.setValueAtTime(150,t);o.frequency.exponentialRampToValueAtTime(42,t+.13);a.gain.setValueAtTime(g,t);a.gain.exponentialRampToValueAtTime(.001,t+.28);o.connect(a);a.connect(dest);o.start(t);o.stop(t+.3)}
+function playStep(step,t){
+  const bar=SONG[Math.floor(step/16)%SONG.length],s=step%16,ch=CHORD[bar.ch],D=SND.mus;
+  if(s===0||s===8||s===10)kick(t,.55,D);
+  if(s===4||s===12)noiseHit(t,.14,.22,'highpass',1500,D,.7);
+  if(s%2===0)noiseHit(t,.035,.07,'highpass',7000,D);
+  if([0,3,6,8,11,14].includes(s))tone('triangle',NOTE(ch[0].replace(/\d/,d=>s===6||s===14?+d+1:d)),t,STEP*1.6,.32,D);
+  tone('square',NOTE(ch[1+s%3].replace(/\d/,d=>+d+(s>=8?1:0))),t,STEP*.7,.022,D);
+  const mn=bar.m[s];if(mn){const o=tone('square',mn[0],t,STEP*mn[1]*.95,.07,D,.01);if(mn[1]>=4){o.frequency.setValueAtTime(mn[0],t+STEP*2);o.frequency.linearRampToValueAtTime(mn[0]*1.012,t+STEP*2.6);o.frequency.linearRampToValueAtTime(mn[0]*.992,t+STEP*3.2)}}
+}
+/* ---------- Stadion ---------- */
+function crowdStart(){
+  if(SND.crowd||!SND.ctx)return;const c=SND.ctx;
+  const src=c.createBufferSource();src.buffer=SND.brown;src.loop=true;
+  const bp=c.createBiquadFilter();bp.type='bandpass';bp.frequency.value=650;bp.Q.value=.55;
+  const hp=c.createBiquadFilter();hp.type='highpass';hp.frequency.value=180;
+  const g=c.createGain();g.gain.value=0;src.connect(bp);bp.connect(hp);hp.connect(g);g.connect(SND.fx);src.start();
+  g.gain.setTargetAtTime(.5,c.currentTime,1.2);SND.crowd={src,g,bp};SND.crowdT=setInterval(crowdLife,1700);SND.chantAt=c.currentTime+rnd(5,10);
+}
+function crowdStop(){if(!SND.crowd)return;const c=SND.ctx,{src,g}=SND.crowd;g.gain.cancelScheduledValues(c.currentTime);g.gain.setTargetAtTime(0,c.currentTime,.5);try{src.stop(c.currentTime+3)}catch(e){}SND.crowd=null;clearInterval(SND.crowdT);SND.crowdT=null}
+function crowdLife(){
+  const c=SND.ctx;if(!SND.crowd)return;const t=c.currentTime;const ht=typeof TK!=='undefined'&&TK&&TK.ht;
+  SND.crowd.g.gain.setTargetAtTime(ht?rnd(.18,.26):rnd(.38,.62),t,.9);SND.crowd.bp.frequency.setTargetAtTime(rnd(520,860),t,1.2);
+  if(t>SND.chantAt){pick(ht?[claps]:[chant,chant,claps,drums])(t+.05);SND.chantAt=t+rnd(9,20)}
+}
+function voices(t,notes,g,vowel){
+  const c=SND.ctx;const bus=c.createGain();bus.gain.value=g;
+  const F=vowel==='a'?[[750,5],[1150,6]]:[[480,5],[880,6]];
+  for(const [fr,q] of F){const f=c.createBiquadFilter();f.type='bandpass';f.frequency.value=fr;f.Q.value=q;bus.connect(f);f.connect(SND.fx)}
+  for(let v=0;v<9;v++){let tt=t+rnd(0,.05);const det=rnd(-22,22);const oct=v%3===0?.5:1;
+    for(const [n,d] of notes){if(n!=='-'){const o=c.createOscillator(),a=c.createGain();o.type='sawtooth';o.frequency.value=NOTE(n)*oct;o.detune.value=det+rnd(-8,8);
+      a.gain.setValueAtTime(0,tt);a.gain.linearRampToValueAtTime(.18,tt+.07);a.gain.setValueAtTime(.18,tt+d*.8);a.gain.linearRampToValueAtTime(0,tt+d);
+      o.connect(a);a.connect(bus);o.start(tt);o.stop(tt+d+.05)}tt+=d}}
+}
+function chant(t){voices(t,pick([
+  [['G3',.42],['G3',.42],['A3',.28],['G3',.28],['E3',.9],['-',.25],['G3',.42],['G3',.42],['A3',.28],['G3',.28],['C4',1.1]],
+  [['C4',.3],['C4',.3],['C4',.3],['D4',.3],['E4',.6],['C4',.6],['-',.2],['D4',.3],['D4',.3],['D4',.3],['E4',.3],['C4',1]],
+  [['E3',.6],['G3',.6],['A3',1.2],['-',.3],['E3',.6],['G3',.6],['A3',1.2]]
+]),.5,pick(['o','a']))}
+function claps(t){const pat=[0,.48,.96,1.2,1.44];for(let r=0;r<3;r++)for(const p of pat)for(let i=0;i<14;i++)noiseHit(t+r*2+p+rnd(-.03,.03),.07,.05,'bandpass',rnd(1400,2600),SND.fx,1.2)}
+function drums(t){const pat=[0,.5,1,1.25,1.5];for(let r=0;r<4;r++)for(const p of pat){kick(t+r*2+p,.5,SND.fx);for(let i=0;i<8;i++)noiseHit(t+r*2+p+rnd(-.02,.03),.06,.035,'bandpass',1800,SND.fx,1.2)}}
+function sndWhistle(pat){
+  if(!SND.ctx||!SND.on.sfx)return;const c=SND.ctx;let t=c.currentTime+.02;
+  for(const d of pat){const g=c.createGain();g.gain.value=0;g.connect(SND.fx);
+    const lfo=c.createOscillator(),lg=c.createGain();lfo.frequency.value=32;lg.gain.value=.05;lfo.connect(lg);lg.connect(g.gain);
+    for(const f of [2850,3020]){const o=c.createOscillator();o.frequency.value=f;o.connect(g);o.start(t);o.stop(t+d+.05)}
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.08,t+.02);g.gain.setValueAtTime(.08,t+d-.04);g.gain.linearRampToValueAtTime(0,t+d);lfo.start(t);lfo.stop(t+d+.05);t+=d+.16}
+}
+function cheer(big){
+  if(!SND.ctx||!SND.on.sfx)return;const c=SND.ctx,t=c.currentTime;
+  const s=c.createBufferSource();s.buffer=SND.noise;s.loop=true;const f=c.createBiquadFilter();f.type='bandpass';f.frequency.value=1100;f.Q.value=.45;const g=c.createGain();
+  const pk=big?.9:.45;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(pk,t+.45);g.gain.setValueAtTime(pk,t+(big?2.6:1.2));g.gain.exponentialRampToValueAtTime(.001,t+(big?6:3));
+  s.connect(f);f.connect(g);g.connect(SND.fx);s.start(t);s.stop(t+6.2);
+  if(big){voices(t+.3,[['G3',.6],['A3',2.2]],.55,'o');SND.chantAt=c.currentTime+4}
+}
+function groan(){
+  if(!SND.ctx||!SND.on.sfx)return;const c=SND.ctx,t=c.currentTime;
+  const s=c.createBufferSource();s.buffer=SND.brown;const f=c.createBiquadFilter();f.type='lowpass';f.frequency.setValueAtTime(900,t);f.frequency.exponentialRampToValueAtTime(220,t+1.8);
+  const g=c.createGain();g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.9,t+.25);g.gain.exponentialRampToValueAtTime(.001,t+2.4);s.connect(f);f.connect(g);g.connect(SND.fx);s.start(t,rnd(0,1));s.stop(t+2.5);
+  for(let i=0;i<10;i++)setTimeout(()=>sndWhistleFan(),300+i*rnd(80,180));
+}
+function sndWhistleFan(){if(!SND.ctx)return;const c=SND.ctx,t=c.currentTime;const o=c.createOscillator(),g=c.createGain();const f0=rnd(1800,3200);o.frequency.setValueAtTime(f0,t);o.frequency.linearRampToValueAtTime(f0*rnd(.6,.85),t+.5);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.012,t+.05);g.gain.linearRampToValueAtTime(0,t+.55);o.connect(g);g.connect(SND.fx);o.start(t);o.stop(t+.6)}
+function chime(){if(!SND.ctx||!SND.on.sfx)return;const c=SND.ctx,t=c.currentTime;if(t-SND.lastChime<1.2)return;SND.lastChime=t;tone('sine',NOTE('E6'),t,.22,.12,SND.fx);tone('sine',NOTE('C6'),t+.18,.35,.12,SND.fx)}
+function blip(){if(!SND.ctx||!SND.on.sfx||SND.mode!=='menu')return;const c=SND.ctx;tone('square',980,c.currentTime,.03,.025,SND.fx)}
+function sndEvents(r){
+  if(!SND.ctx)return;
+  for(const m of r.matches){const evs=m.ev.slice(m._seen||0);m._seen=m.ev.length;if(!evs.length)continue;
+    const hh=team(m.hid).human>=0,ha=team(m.aid).human>=0;
+    for(const e of evs){
+      if(hh||ha){
+        if(e.t==='goal'){const mine=(e.s===0&&hh)||(e.s===1&&ha);if(mine)cheer(true);else groan()}
+        else if(e.t==='red')sndWhistle([.4]);
+        else if(e.t==='info'&&e.txt==='Verlängerung')sndWhistle([.6,.6]);
+      }else if(e.t==='goal')chime();
+    }}
+}
+/* ---------- Pixel-Stadion ---------- */
+function drawStadium(){
+  const cv=document.getElementById('stadium');if(!cv)return;const x=cv.getContext('2d');const W=160,H=56;
+  x.fillStyle='#0a1340';x.fillRect(0,0,W,H);
+  for(let i=0;i<40;i++){x.fillStyle=i%3?'#24357f':'#3a4ea8';x.fillRect(ri(0,W),ri(0,14),1,1)}
+  x.fillStyle='#1b2a6e';x.fillRect(0,14,W,20);
+  const cols=['#e8e8e8','#ffd84a','#ff6b6b','#64e0ff','#74e6a2','#ff9a3c','#c08bff','#2b2b2b'];
+  for(let yy=15;yy<34;yy++)for(let xx=0;xx<W;xx++)if(Math.random()<.62){x.fillStyle=pick(cols);x.fillRect(xx,yy,1,1)}
+  for(const fx of [8,152]){x.fillStyle='#64e0ff';x.fillRect(fx,4,1,30);x.fillStyle='#ffd84a';x.fillRect(fx-4,1,9,4);x.fillStyle='#0b1440';for(let k=-3;k<5;k+=2)x.fillRect(fx+k,1,1,4);
+    x.fillStyle='rgba(255,230,140,.12)';x.beginPath();x.moveTo(fx-4,5);x.lineTo(fx+5,5);x.lineTo(fx<80?70:150,56);x.lineTo(fx<80?10:90,56);x.fill()}
+  x.fillStyle='#000';x.fillRect(64,3,32,9);x.fillStyle='#ffcf2e';x.font='7px monospace';x.textBaseline='top';x.fillText('1 : 0',68,4);
+  for(let yy=34;yy<H;yy++){x.fillStyle=Math.floor((yy-34)/4)%2?'#1f7a3a':'#25893f';x.fillRect(0,yy,W,1)}
+  x.fillStyle='#e9eeff';x.fillRect(4,35,W-8,1);x.fillRect(80,35,1,H-35);
+  x.strokeStyle='#e9eeff';x.lineWidth=1;x.beginPath();x.ellipse(80.5,47,10,6,0,0,Math.PI*2);x.stroke();
+  x.fillRect(4,35,1,H-35);x.fillRect(W-5,35,1,H-35);
+  [[60,44,'#c8102e'],[72,50,'#c8102e'],[95,41,'#fde100'],[104,49,'#fde100'],[88,46,'#c8102e']].forEach(([px,py,c])=>{x.fillStyle=c;x.fillRect(px,py,2,3);x.fillStyle='#f2d0a9';x.fillRect(px,py-1,2,1)});
+  x.fillStyle='#fff';x.fillRect(84,48,1,1);
 }
 
 /* =========================== AKTIONEN =========================== */
@@ -1132,7 +1280,9 @@ const ACT={
   tkNext:()=>{TK.ri++;TK.live=null;nextRound()},
   htStyle:d=>{const m=TK.live.matches[+d.m];m.style[+d.s]=d.v;m.str[+d.s]=null;renderTicker()},
   htSub:d=>{const m=TK.live.matches[+d.m],s=+d.s;const o=+$(`#ht-out-${d.m}-${s}`).value,i=+$(`#ht-in-${d.m}-${s}`).value;if(!subst(m,s,o,i))toast('Wechsel nicht möglich.');renderTicker()},
-  htGo:()=>{TK.ht=false;renderTicker();startTimer()},
+  htGo:()=>{TK.ht=false;sndWhistle([.7]);renderTicker();startTimer()},
+  mute:()=>{sndInit();const any=SND.on.music||SND.on.sfx;SND.on.music=SND.on.sfx=!any;sndSave();sndApplyMode();render();if(TK&&TK.live)renderTicker()},
+  sndSet:d=>{sndInit();SND.on[d.k]=d.v==='1';sndSave();sndApplyMode();render()},
   sumClose:()=>{$('#ov').hidden=true;TK=null;S.turn=0;UI.view='office';autosave();render();window.scrollTo(0,0);if(S.humans.length>1)showHandover()}
 };
 function resolveNews(id,k){
@@ -1159,7 +1309,8 @@ const CHG={
   edName:el=>{const v=el.value.trim();if(v)team(UI.ed).name=v;render()},
   edShort:el=>{const v=el.value.trim();if(v)team(UI.ed).short=v;render()},
   edC:el=>{team(UI.ed)[el.dataset.k]=el.value;render()},
-  edPlayer:el=>{const v=el.value.trim();if(v)P(+el.dataset.id).n=v}
+  edPlayer:el=>{const v=el.value.trim();if(v)P(+el.dataset.id).n=v},
+  vol:el=>{SND.vol=clamp(+el.value/100,0,1);if(SND.master)SND.master.gain.value=SND.vol;sndSave()}
 };
 
 
@@ -1169,6 +1320,10 @@ ACT.fileLoad=()=>{const i=document.createElement('input');i.type='file';i.accept
 
 /* =========================== START =========================== */
 if(typeof document!=='undefined'){
+  sndLoad();
+  document.addEventListener('pointerdown',e=>{sndInit();if(e.target.closest('button,.click'))blip()},{capture:true});
+  document.addEventListener('keydown',()=>sndInit(),{once:true});
+  document.addEventListener('visibilitychange',()=>{if(!SND.ctx)return;if(document.hidden)SND.ctx.suspend();else SND.ctx.resume()});
   document.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if(!el)return;const f=ACT[el.dataset.act];if(f){if(el.tagName==='A')e.preventDefault();f(el.dataset,el,e)}});
   document.addEventListener('change',e=>{const el=e.target.closest('[data-chg]');if(el&&CHG[el.dataset.chg])CHG[el.dataset.chg](el)});
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#modal').hidden)closeModal()});
