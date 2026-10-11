@@ -909,9 +909,19 @@ function viewOffice(){
    ${newsPanel()}
   </div>`;
 }
-function posSpark(h,t){const ph=(h.posHist||[]).slice(-34);if(ph.length<2)return '';const n=leagueTeams(t.league).length,W=300,H=60;
-  const pts=ph.map((v,i)=>`${(i*W/(ph.length-1)).toFixed(1)},${(4+(v-1)/(n-1)*(H-8)).toFixed(1)}`).join(' ');const last=ph[ph.length-1],x=W,y=4+(last-1)/(n-1)*(H-8);
-  return `<div style="margin-top:12px"><div class="row" style="justify-content:space-between"><span class="lbl">Tabellenplatz-Trend</span><span class="small">${ph[0]}. → ${last}.</span></div><svg viewBox="-4 0 ${W+8} ${H}" width="100%" height="${H}" preserveAspectRatio="none" role="img" aria-label="Verlauf des Tabellenplatzes"><line x1="0" x2="${W}" y1="${4+(h.target-1)/(n-1)*(H-8)}" y2="${4+(h.target-1)/(n-1)*(H-8)}" stroke="var(--good)" stroke-dasharray="4 4" stroke-width="1"/><polyline fill="none" stroke="var(--hi)" stroke-width="2" vector-effect="non-scaling-stroke" points="${pts}"/><circle cx="${x}" cy="${y}" r="3.5" fill="var(--hi)"/></svg><div class="small dim">Gestrichelt: Saisonziel Platz ${h.target}</div></div>`}
+function posSpark(h,t){
+  const ph=(h.posHist||[]).slice(-34);const now=tablePos(t);
+  if(!ph.length||ph[ph.length-1]!==now)ph.push(now);
+  if(ph.length<2)return '';
+  const n=leagueTeams(t.league).length,W=300,H=60,yy=v=>4+(v-1)/(n-1)*(H-8),xx=i=>i*W/(ph.length-1);
+  const prev=ph[ph.length-2],d=prev-now;
+  const delta=d>0?`<span class="good">▲ ${d}</span>`:d<0?`<span class="bad">▼ ${-d}</span>`:'<span class="dim">=</span>';
+  const best=Math.min(...ph),worst=Math.max(...ph);
+  const pts=ph.map((v,i)=>`${xx(i).toFixed(1)},${yy(v).toFixed(1)}`).join(' ');
+  const dots=ph.map((v,i)=>`<circle cx="${xx(i).toFixed(1)}" cy="${yy(v).toFixed(1)}" r="${i===ph.length-1?3.5:1.6}" fill="var(--hi)"><title>${i+1}. Spieltag: Platz ${v}</title></circle>`).join('');
+  return `<div style="margin-top:12px"><div class="row" style="justify-content:space-between"><span class="lbl">Tabellenplatz-Trend</span><span class="small">Platz <b>${now}.</b> ${delta} <span class="dim">zum Vorspieltag</span></span></div>
+  <svg viewBox="-4 0 ${W+8} ${H}" width="100%" height="${H}" preserveAspectRatio="none" role="img" aria-label="Verlauf des Tabellenplatzes, aktuell Platz ${now}"><line x1="0" x2="${W}" y1="${yy(h.target)}" y2="${yy(h.target)}" stroke="var(--good)" stroke-dasharray="4 4" stroke-width="1" vector-effect="non-scaling-stroke"/><polyline fill="none" stroke="var(--hi)" stroke-width="2" vector-effect="non-scaling-stroke" points="${pts}"/>${dots}</svg>
+  <div class="small dim">Beste Platzierung ${best}., schlechteste ${worst}. · Gestrichelt: Saisonziel Platz ${h.target}</div></div>`}
 function fixRow(f,me,label){
   const played=f.gh!=null;const pen=f.pen?`<div class="small dim c">i. E. ${f.pen[0]}:${f.pen[1]}</div>`:'';
   return `<div class="fx${f.h===me||f.a===me?' me':''}"><div class="h${played&&(f.gh>f.ga||(f.pen&&f.pen[0]>f.pen[1]))?' w':''}">${tname(f.h)}</div><div><div class="s">${played?f.gh+':'+f.ga:'–:–'}</div>${pen}${label?`<div class="small dim c">${esc(label)}</div>`:''}</div><div class="a${played&&(f.ga>f.gh||(f.pen&&f.pen[1]>f.pen[0]))?' w':''}">${tname(f.a)}</div></div>`;
