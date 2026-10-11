@@ -263,6 +263,8 @@ function calcStr(p){const w=SKW[p.pos];let v=0;for(const k in w)v+=w[k]*p.sk[k];
 function mkSkills(p){const w=SKW[p.pos];p.sk={};for(const k of SK){const rel=w[k]?0:(k==='TWR'?-45:p.pos==='TW'?-22:-10);p.sk[k]=clamp(Math.round(p.str+rel+rnd(-10,10)),5,99)}syncSkills(p)}
 function syncSkills(p){if(!p.sk)return mkSkills(p);const w=SKW[p.pos];for(let i=0;i<4;i++){const d=p.str-calcStr(p);if(!d)break;for(const k in w)p.sk[k]=clamp(p.sk[k]+d,5,99)}}
 function ensureP(p){if(!p.sk)mkSkills(p);if(!p.fh)p.fh=[];if(p.s0==null)p.s0=p.str}
+const CORE={TW:'TWR',AB:'ZWK',MF:'PAS',ST:'SCH'};
+function applyTfMode(t){if(!t.tfMode||t.tfMode==='manual')return;for(const id of t.squad){const p=P(id);ensureP(p);p.tf=t.tfMode==='core'?CORE[p.pos]:strengths(p).worst}}
 function strengths(p){ensureP(p);const ks=Object.keys(SKW[p.pos]).sort((a,b)=>p.sk[b]-p.sk[a]);return {best:ks.slice(0,2),worst:ks[ks.length-1]}}
 function formTrend(p){const h=p.fh||[];const ref=h.length>=4?h[h.length-4]:h[0];if(ref==null)return '';const d=p.form-ref;const [c,a]=d>.8?['good','▲']:d>.25?['good','▴']:d<-.8?['bad','▼']:d<-.25?['bad','▾']:['dim','▸'];return `<span class="${c}" title="Formtrend">${a}</span>`}
 function strTrend(p){const d=p.str-(p.s0??p.str);return d?`<span class="${d>0?'good':'bad'} small">${d>0?'+':''}${d}</span>`:''}
@@ -579,6 +581,7 @@ function weeklyEconomy(t){
   if(t.sponsor)book(t,t.sponsor.fixed/34,'sponsor');
 }
 function weeklyTraining(t){
+  applyTfMode(t);
   const it=t.train,rec=it==='leicht'?22:it==='hart'?11:16,g=it==='leicht'?.6:it==='hart'?1.5:1,injP=it==='hart'?.008:it==='normal'?.002:.0005;
   for(const id of t.squad){const p=P(id);
     if(p.inj>0)p.inj--;if(p.sus>0)p.sus--;
@@ -950,7 +953,11 @@ function viewTraining(){
    <p class="small dim" style="margin:2px 0 6px">Einmal pro Halbserie: +1,5 Form und +10 Fitness für alle Spieler. Kosten ${money(cost)}.</p>
    <button class="btn" data-act="camp"${t.camp[half]?' disabled':''}>${t.camp[half]?'In dieser Halbserie schon genutzt':'Trainingslager buchen'}</button>
   </div></div>
-  <div class="panel"><h2>Einzeltraining <small>Stärken ausbauen, Schwächen beheben</small></h2><div class="bd tw"><table><thead><tr><th>Spieler</th><th>Pos</th><th class="n">Alter</th><th class="n">Stärke</th><th>Stärken / Schwäche</th><th>Schwerpunkt</th></tr></thead><tbody>${t.squad.map(P).sort((a,b)=>POS.indexOf(a.pos)-POS.indexOf(b.pos)||b.str-a.str).map(p=>{const sw=strengths(p);return `<tr><td>${esc(p.n)}</td><td>${posChip(p)}</td><td class="n">${p.age}</td><td class="n">${p.str} ${strTrend(p)}</td><td class="small"><span class="good">${sw.best.map(k=>SKN[k]).join(', ')}</span> · <span class="bad">${SKN[sw.worst]}</span></td><td><select id="tf-${p.id}" data-chg="focusSel" data-id="${p.id}" aria-label="Schwerpunkt"><option value="">Allgemein</option>${Object.keys(SKW[p.pos]).map(k=>`<option value="${k}"${p.tf===k?' selected':''}>${SKN[k]}${k===sw.worst?' (Schwäche)':''}</option>`).join('')}</select></td></tr>`}).join('')}</tbody></table><p class="small dim">Entwicklung nur bis zur Talentgrenze und vor allem bei jungen Spielern. Hartes Training beschleunigt alles.</p></div></div>
+  <div class="panel"><h2>Einzeltraining <small>Stärken ausbauen, Schwächen beheben</small></h2><div class="bd tw">
+   <div class="lbl">Für die ganze Mannschaft</div>
+   <div class="seg" style="margin:4px 0 6px">${[['weak','Jeder an seiner Schwäche'],['core','Jeder an seiner Kernstärke'],['none','Alle allgemein']].map(([k,l])=>`<button data-act="tfAll" data-k="${k}" class="${(t.tfMode||'')===k||(k==='none'&&!t.tfMode)?'on':''}">${l}</button>`).join('')}</div>
+   <p class="small dim" style="margin:0 0 10px">Kernstärke je Position: Torwart → Torwartspiel, Abwehr → Zweikampf, Mittelfeld → Passspiel, Sturm → Schuss. Bei „Schwäche“ wechselt der Schwerpunkt automatisch, sobald eine andere Fähigkeit zur schwächsten wird.${t.tfMode==='manual'?' <span class="warn">Aktuell individuell angepasst.</span>':''}</p>
+   <table><thead><tr><th>Spieler</th><th>Pos</th><th class="n">Alter</th><th class="n">Stärke</th><th>Stärken / Schwäche</th><th>Schwerpunkt</th></tr></thead><tbody>${t.squad.map(P).sort((a,b)=>POS.indexOf(a.pos)-POS.indexOf(b.pos)||b.str-a.str).map(p=>{const sw=strengths(p);return `<tr><td>${esc(p.n)}</td><td>${posChip(p)}</td><td class="n">${p.age}</td><td class="n">${p.str} ${strTrend(p)}</td><td class="small"><span class="good">${sw.best.map(k=>SKN[k]).join(', ')}</span> · <span class="bad">${SKN[sw.worst]}</span></td><td><select id="tf-${p.id}" data-chg="focusSel" data-id="${p.id}" aria-label="Schwerpunkt"><option value="">Allgemein</option>${Object.keys(SKW[p.pos]).map(k=>`<option value="${k}"${p.tf===k?' selected':''}>${SKN[k]}${k===sw.worst?' (Schwäche)':''}</option>`).join('')}</select></td></tr>`}).join('')}</tbody></table><p class="small dim">Entwicklung nur bis zur Talentgrenze und vor allem bei jungen Spielern. Hartes Training beschleunigt alles.</p></div></div>
   <div class="panel"><h2>Zustand der Mannschaft</h2><div class="bd">
    <div class="strbar"><span class="lbl">Fit</span>${meter(avgFit)}<span class="n">${Math.round(avgFit)}</span></div>
    <div class="strbar" style="margin-top:6px"><span class="lbl">Form</span>${meter(avgForm,10,'var(--cyan)')}<span class="n">${avgForm.toFixed(1)}</span></div>
@@ -1437,7 +1444,8 @@ const ACT={
   lineupForm:d=>{const t=curTeam();t.tactic.form=d.f;t.slots=formSlots(d.f);render()},
   slotsReset:()=>{const t=curTeam();t.slots=formSlots(t.tactic.form);render()},
   benchSel:d=>benchTap(+d.id),
-  focus:d=>{const p=P(+d.id);p.tf=d.k||null;playerModal(p.id);render()},
+  focus:d=>{const p=P(+d.id);p.tf=d.k||null;const t=team(p.tid);if(t&&t.tfMode&&t.tfMode!=='none')t.tfMode='manual';playerModal(p.id);render()},
+  tfAll:d=>{const t=curTeam();if(d.k==='none'){t.tfMode=null;for(const id of t.squad)P(id).tf=null;toast('Alle trainieren allgemein.')}else{t.tfMode=d.k;applyTfMode(t);toast(d.k==='weak'?'Jeder Spieler arbeitet an seiner Schwäche.':'Jeder Spieler baut seine Kernstärke aus.')}render()},
   setBonus:d=>{curTeam().bonus=+d.v;render()},
   setAutoXI:d=>{cur().autoXI=d.v==='1';render()},
   setMerch:d=>{curTeam().merch=+d.v;render()},
@@ -1511,7 +1519,7 @@ function resolveNews(id,k){
 }
 const CHG={
   formation:el=>{const t=curTeam();t.tactic.form=el.value;t.slots=formSlots(el.value);render()},
-  focusSel:el=>{P(+el.dataset.id).tf=el.value||null;render()},
+  focusSel:el=>{const p=P(+el.dataset.id);p.tf=el.value||null;const t=team(p.tid);if(t&&t.tfMode&&t.tfMode!=='none')t.tfMode='manual';render()},
   mkSrc:el=>{UI.mk.src=el.value;render()},
   mkMax:el=>{UI.mk.max=el.value;render()},
   mkSort:el=>{UI.mk.sort=el.value;render()},
