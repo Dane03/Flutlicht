@@ -46,4 +46,4 @@ Im Menü läuft eigene Chiptune-Musik, während der Spiele Stadionatmosphäre mi
 
 ## Updates
 
-Neue Version der Dateien hochladen und die App einmal online öffnen. Für ein sofortiges Update in `sw.js` die Zeile `const CACHE='flutlicht-v11'` hochzählen.
+Neue Version der Dateien hochladen und die App einmal online öffnen. Für ein sofortiges Update in `sw.js` die Zeile `const CACHE='flutlicht-v12'` hochzählen.
