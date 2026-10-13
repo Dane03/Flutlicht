@@ -173,6 +173,9 @@ label{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:600;
 .benchp{display:grid;grid-template-columns:1fr auto;gap:2px 8px;text-align:left;background:var(--deep);border:2px solid var(--line);padding:6px 8px;cursor:pointer;color:var(--fg)}
 .benchp .meter{grid-column:1/-1}.benchp.sel{border-color:var(--hi)}.benchp[disabled]{opacity:.45;cursor:not-allowed}
 .help p{max-width:70ch;margin:0 0 8px}
+.pitch.htp{width:min(100%,380px);aspect-ratio:68/84;touch-action:auto}
+.tok.htt{cursor:pointer;width:min(64px,19%);min-width:52px}.tok.htt b{font-size:11px;max-width:100%}.tok.htt span{font-weight:700}.tok.tired{border-color:var(--bad)}.tok.tired.sel{border-color:var(--hi)}
+.htbar{display:flex;flex-direction:column;gap:6px;margin:8px 0;padding:8px;background:var(--deep);border:2px solid var(--hi)}
 .htrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:5px 0;border-top:1px solid rgba(70,96,207,.35)}
 .htrow select{max-width:150px}
 /* ---- Touch & iOS ---- */
@@ -1556,20 +1559,30 @@ function applyFormation(m,s,f){
   for(const id of [...left]){const p=P(id);const r=['AB','MF','ST'].filter(r=>need[r]>0).sort((a,b)=>ROLEPEN[b][p.pos]-ROLEPEN[a][p.pos])[0]||rl(id);roles[id]=r;if(need[r]>0)need[r]--}
   Object.assign(m.role[s],roles);m.str[s]=null;
 }
+function fitCol(f){return f>=70?'var(--good)':f>=50?'var(--warn)':'var(--bad)'}
+function htPitch(m,mi,s){
+  const rl=id=>m.role[s][id]||P(id).pos;const sel=TK.htSel&&TK.htSel.mi===mi&&TK.htSel.s===s?TK.htSel.id:null;
+  const rows={ST:18,MF:44,AB:70,TW:90};const by={TW:[],AB:[],MF:[],ST:[]};for(const id of m.on[s])by[rl(id)].push(id);
+  let toks='';
+  for(const r of POS){const ids=by[r];ids.forEach((id,i)=>{const p=P(id);const x=Math.round(100*(i+1)/(ids.length+1));const f=Math.round(p.fit);const off=r!==p.pos;
+    toks+=`<button class="tok htt${sel===id?' sel':''}${f<50?' tired':''}${off?' off':''}" style="left:${x}%;top:${rows[r]+(ids.length>=4?(i%2?5:-5):0)}%" data-act="htTok" data-m="${mi}" data-s="${s}" data-id="${id}" aria-label="${esc(p.n)}, ${POSN[r]}, Kraft ${f} Prozent"><i class="pos ${p.pos}">${p.pos}</i><b>${esc(p.n.split(' ').slice(-1)[0])}</b><span style="color:${fitCol(f)}">${f} %${off?' · '+r:''}</span><em style="width:${f}%;background:${fitCol(f)}"></em></button>`})}
+  const bn=benchOf(m,s).map(P).sort((a,b)=>POS.indexOf(a.pos)-POS.indexOf(b.pos)||b.str-a.str);const sp=sel?P(sel):null;
+  const bar=sp?`<div class="htbar"><span><b>${esc(sp.n)}</b> · ${POSN[rl(sel)]} · Kraft <b style="color:${fitCol(sp.fit)}">${Math.round(sp.fit)} %</b></span><div class="seg">${POS.map(r=>`<button data-act="htPos" data-v="${r}" class="${rl(sel)===r?'on':''}">${r}</button>`).join('')}</div><span class="small dim">${m.used[s]<3?'Bankspieler antippen zum Einwechseln, oder zweiten Spieler auf dem Platz antippen zum Tauschen.':'Keine Wechsel mehr übrig. Zweiten Spieler antippen zum Tauschen.'}</span></div>`
+    :`<p class="small dim" style="margin:6px 0">Spieler antippen, um Position zu ändern, zu tauschen oder auszuwechseln. Rot: Kraft unter 50 %.</p>`;
+  return `<div class="pitch htp"><div class="pl half"></div><div class="pl circ"></div><div class="pl box1"></div><div class="pl box2"></div>${toks}</div>${bar}
+   <div class="lbl" style="margin-top:8px">Bank · Wechsel ${m.used[s]}/3</div>
+   <div class="fxl">${bn.length?bn.map(p=>`<button class="benchp" data-act="htBench" data-m="${mi}" data-s="${s}" data-id="${p.id}"${m.used[s]>=3?' disabled':''}><span>${posChip(p)} ${esc(p.n)}</span><span class="small">${p.str} · Kraft ${Math.round(p.fit)} %</span>${meter(p.fit)}</button>`).join(''):'<p class="small dim">Keine Spieler auf der Bank.</p>'}</div>`;
+}
 function htPanel(hm){
   let html='';
   for(const [m,mi] of hm)for(let s=0;s<2;s++){const t=team(s?m.aid:m.hid);if(t.human<0||m.done)continue;
-    const rl=id=>m.role[s][id]||P(id).pos;const on=m.on[s].map(P).sort((a,b)=>POS.indexOf(rl(a.id))-POS.indexOf(rl(b.id))),bn=benchOf(m,s).map(P);
-    const cnt=r=>m.on[s].filter(id=>rl(id)===r).length;const cur=`${cnt('AB')}-${cnt('MF')}-${cnt('ST')}`;const st=teamStr(m.on[s],m.style[s],m.hart[s],m.role[s],m.mot[s]);
-    html+=`<div style="padding:8px 0;border-top:1px solid var(--line)"><div class="row" style="justify-content:space-between"><b>${esc(t.name)}</b><span class="small dim">${esc(S.humans[t.human].name)} · Wechsel ${m.used[s]}/3</span></div>
-    <p class="small dim" style="margin:4px 0 0">Aufstellung jetzt ${cur} · Abw ${st.def.toFixed(1)} · Mit ${st.mid.toFixed(1)} · Ang ${st.att.toFixed(1)}</p>
-    <div class="lbl" style="margin-top:8px">System</div><div class="seg">${Object.keys(FORMS).map(f=>`<button data-act="htForm" data-m="${mi}" data-s="${s}" data-f="${f}" class="${f===cur?'on':''}">${f}</button>`).join('')}</div>
+    const rl=id=>m.role[s][id]||P(id).pos;const cnt=r=>m.on[s].filter(id=>rl(id)===r).length;const cur=`${cnt('AB')}-${cnt('MF')}-${cnt('ST')}`;const st=teamStr(m.on[s],m.style[s],m.hart[s],m.role[s],m.mot[s]);
+    html+=`<div style="padding:8px 0;border-top:1px solid var(--line)"><div class="row" style="justify-content:space-between"><b>${esc(t.name)}</b><span class="small dim">${esc(S.humans[t.human].name)} · Kraft Ø ${kraft(m,s)} %</span></div>
+    <p class="small dim" style="margin:4px 0 6px">Aufstellung ${cur} · Abw ${st.def.toFixed(1)} · Mit ${st.mid.toFixed(1)} · Ang ${st.att.toFixed(1)}</p>
+    ${htPitch(m,mi,s)}
+    <div class="lbl" style="margin-top:10px">System</div><div class="seg">${Object.keys(FORMS).map(f=>`<button data-act="htForm" data-m="${mi}" data-s="${s}" data-f="${f}" class="${f===cur?'on':''}">${f}</button>`).join('')}</div>
     <div class="lbl" style="margin-top:8px">Ausrichtung</div><div class="seg">${Object.entries(STYLES).map(([k,l])=>`<button data-act="htStyle" data-m="${mi}" data-s="${s}" data-v="${k}" class="${m.style[s]===k?'on':''}">${l}</button>`).join('')}</div>
-    <div class="lbl" style="margin-top:8px">Zweikämpfe</div><div class="seg"><button data-act="htHart" data-m="${mi}" data-s="${s}" data-v="0" class="${!m.hart[s]?'on':''}">Fair</button><button data-act="htHart" data-m="${mi}" data-s="${s}" data-v="1" class="${m.hart[s]?'on':''}">Hart</button></div>
-    <div class="lbl" style="margin-top:8px">Positionen auf dem Platz</div>
-    <div>${on.map(p=>`<div class="htrow"><span>${posChip(p)} ${esc(p.n)} <span class="small dim">${p.str} · Kraft ${Math.round(p.fit)} %</span></span><select id="ht-role-${mi}-${s}-${p.id}" data-chg="htRole" data-m="${mi}" data-s="${s}" data-id="${p.id}" aria-label="Position von ${esc(p.n)}">${POS.map(r=>`<option value="${r}"${rl(p.id)===r?' selected':''}>${POSN[r]}</option>`).join('')}</select></div>`).join('')}</div>
-    <div class="lbl" style="margin-top:8px">Auswechslung</div>
-    ${m.used[s]<3&&bn.length?`<div class="row" style="margin-top:4px"><select id="ht-out-${mi}-${s}" aria-label="Spieler raus">${on.slice().sort((a,b)=>a.fit-b.fit).map(p=>`<option value="${p.id}">raus: ${rl(p.id)} ${esc(p.n)} (${p.str}, Kraft ${Math.round(p.fit)} %)</option>`).join('')}</select><select id="ht-in-${mi}-${s}" aria-label="Spieler rein">${bn.map(p=>`<option value="${p.id}">rein: ${p.pos} ${esc(p.n)} (${p.str}, Kraft ${Math.round(p.fit)} %)</option>`).join('')}</select><button class="btn sm pri" data-act="htSub" data-m="${mi}" data-s="${s}">Wechseln</button></div>`:'<p class="small dim" style="margin:4px 0 0">Keine Wechsel mehr möglich.</p>'}</div>`}
+    <div class="lbl" style="margin-top:8px">Zweikämpfe</div><div class="seg"><button data-act="htHart" data-m="${mi}" data-s="${s}" data-v="0" class="${!m.hart[s]?'on':''}">Fair</button><button data-act="htHart" data-m="${mi}" data-s="${s}" data-v="1" class="${m.hart[s]?'on':''}">Hart</button></div></div>`}
   const anyLive=TK.live.matches.some(m=>!m.done&&m.min>=45&&m.min<=46);
   return `<div class="ht"><h2>${anyLive?'Halbzeit':'Taktik & Wechsel'}</h2>${html||'<p class="dim">Keine Eingriffe möglich.</p>'}<div class="row" style="margin-top:10px"><button class="btn pri big" data-act="htGo">Weiter ▸</button></div></div>`;
 }
@@ -1835,7 +1848,13 @@ const ACT={
     TK.dec=null;renderTicker();startTimer()},
   htForm:d=>{const m=TK.live.matches[+d.m],s=+d.s;applyFormation(m,s,d.f);addEv(m,s,'info',null,{txt:`${team(s?m.aid:m.hid).short} stellt auf ${d.f} um`});renderTicker()},
   htHart:d=>{const m=TK.live.matches[+d.m];m.hart[+d.s]=d.v==='1';m.str[+d.s]=null;renderTicker()},
-  htGo:()=>{TK.ht=false;TK.scene=null;sndWhistle([.7]);renderTicker();startTimer()},
+  htTok:d=>{const sel=TK.htSel,mi=+d.m,s=+d.s,id=+d.id;const m=TK.live.matches[mi];
+    if(sel&&sel.mi===mi&&sel.s===s&&sel.id!==id){const r=m.role[s];const a=r[sel.id]||P(sel.id).pos,b=r[id]||P(id).pos;r[sel.id]=b;r[id]=a;m.str[s]=null;TK.htSel=null}
+    else TK.htSel=sel&&sel.id===id?null:{mi,s,id};renderTicker()},
+  htPos:d=>{const sel=TK.htSel;if(!sel)return;const m=TK.live.matches[sel.mi];m.role[sel.s][sel.id]=d.v;m.str[sel.s]=null;renderTicker()},
+  htBench:d=>{const sel=TK.htSel,mi=+d.m,s=+d.s;if(!sel||sel.mi!==mi||sel.s!==s)return toast('Erst den Spieler auf dem Platz antippen, der raus soll.');const m=TK.live.matches[mi];
+    if(!subst(m,s,sel.id,+d.id))return toast('Wechsel nicht möglich.');TK.htSel=null;renderTicker()},
+  htGo:()=>{TK.htSel=null;TK.ht=false;TK.scene=null;sndWhistle([.7]);renderTicker();startTimer()},
   mute:()=>{sndInit();const any=SND.on.music||SND.on.sfx;SND.on.music=SND.on.sfx=!any;sndSave();sndApplyMode();render();if(TK&&TK.live)renderTicker()},
   sndSet:d=>{sndInit();SND.on[d.k]=d.v==='1';sndSave();sndApplyMode();render()},
   sumClose:()=>{$('#ov').hidden=true;lockScroll();TK=null;S.turn=0;UI.view='office';autosave();render();window.scrollTo(0,0);if(S.humans.length>1)showHandover()}
