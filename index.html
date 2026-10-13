@@ -1537,7 +1537,7 @@ function renderTicker(){
   let listHTML='';
   if(r.comp==='LIGA'||r.comp==='NACH'){const a=grp('L1'),b=grp('L2');listHTML=(a?`<div class="lbl">Bundesliga</div><div class="conf">${a}</div>`:'')+(b?`<div class="lbl">2. Bundesliga</div><div class="conf">${b}</div>`:'')}else{const a=grp(r.comp);listHTML=a?`<div class="lbl">Weitere Spiele</div><div class="conf">${a}</div>`:''}
   const sp=S.settings.speed;
-  const ctl=r.fin?`<button class="btn pri big" data-act="tkNext">Weiter ▸</button>`:TK.ht?'':`<div class="seg">${[['langsam','Langsam'],['normal','Normal'],['schnell','Schnell']].map(([k,l])=>`<button data-act="tkSpeed" data-k="${k}" class="${sp===k?'on':''}">${l}</button>`).join('')}</div><button class="btn" data-act="tkPause">Taktik / Wechsel</button><button class="btn" data-act="tkSkip">Zum Ergebnis</button>`;
+  const ctl=r.fin?`<button class="btn pri big" data-act="tkNext">Weiter ▸</button>`:TK.ht?`<button class="btn pri big" data-act="htGo">Weiter ▸</button>`:`<div class="seg">${[['langsam','Langsam'],['normal','Normal'],['schnell','Schnell']].map(([k,l])=>`<button data-act="tkSpeed" data-k="${k}" class="${sp===k?'on':''}">${l}</button>`).join('')}</div><button class="btn" data-act="tkPause">Taktik / Wechsel</button><button class="btn" data-act="tkSkip">Zum Ergebnis</button>`;
   const keep=ov.scrollTop;ov.innerHTML=`<div class="ov-in"><div class="tk-sticky"><div class="tk-head"><div><div class="lbl">Konferenz · ${yearLabel()}</div><h1>${esc(r.label)}</h1></div><div style="text-align:right"><div class="clock">${clock}</div>${muteBtn()}</div></div>${TK.dec?'':`<div class="row">${ctl}</div>`}</div>${TK.dec?decPanel():''}${TK.scene?'<canvas id="scene" class="stadium" width="160" height="72" style="aspect-ratio:160/72;cursor:pointer" data-act="sceneSkip" aria-label="Torszene"></canvas>':''}${TK.ht?htPanel(hm):''}<div class="grid">${cards}</div>${listHTML}</div>`;ov.scrollTop=(TK.dec||TK.ht)?0:keep;lockScroll();
 }
 function decPanel(){
@@ -1584,7 +1584,7 @@ function htPanel(hm){
     <div class="lbl" style="margin-top:8px">Ausrichtung</div><div class="seg">${Object.entries(STYLES).map(([k,l])=>`<button data-act="htStyle" data-m="${mi}" data-s="${s}" data-v="${k}" class="${m.style[s]===k?'on':''}">${l}</button>`).join('')}</div>
     <div class="lbl" style="margin-top:8px">Zweikämpfe</div><div class="seg"><button data-act="htHart" data-m="${mi}" data-s="${s}" data-v="0" class="${!m.hart[s]?'on':''}">Fair</button><button data-act="htHart" data-m="${mi}" data-s="${s}" data-v="1" class="${m.hart[s]?'on':''}">Hart</button></div></div>`}
   const anyLive=TK.live.matches.some(m=>!m.done&&m.min>=45&&m.min<=46);
-  return `<div class="ht"><h2>${anyLive?'Halbzeit':'Taktik & Wechsel'}</h2>${html||'<p class="dim">Keine Eingriffe möglich.</p>'}<div class="row" style="margin-top:10px"><button class="btn pri big" data-act="htGo">Weiter ▸</button></div></div>`;
+  return `<div class="ht"><h2>${anyLive?'Halbzeit':'Taktik & Wechsel'}</h2>${html||'<p class="dim">Keine Eingriffe möglich.</p>'}</div>`;
 }
 function showSummary(){
   const ov=$('#ov');ov.hidden=false;lockScroll();
@@ -1592,7 +1592,7 @@ function showSummary(){
   const blocks=TK.rounds.map(r=>{const ms=r.matches.slice().sort((a,b)=>(humanInMatch(b)?1:0)-(humanInMatch(a)?1:0));
     return `<div class="panel"><h2>${esc(r.label)}</h2><div class="bd conf">${ms.map(m=>fixRow(m.fx,hum.has(m.hid)?m.hid:hum.has(m.aid)?m.aid:0)).join('')}</div></div>`}).join('');
   const seasonDone=S.week===1&&S.history.length&&TK.rounds.some(r=>r.comp==='LIGA'&&r.label.startsWith('34.'));
-  ov.innerHTML=`<div class="ov-in"><div class="tk-head"><div><div class="lbl">Ergebnisse</div><h1>${seasonDone?'Saison beendet':TK.rounds.mid?'Englische Woche':'Woche abgeschlossen'}</h1></div></div>${seasonDone?`<div class="panel"><h2>Saison ${esc(S.history[0].y)}</h2><div class="bd"><p>Meister: <b class="hi">${esc(S.history[0].m1)}</b> · Pokal: ${esc(S.history[0].pok)} · Europapokal: ${esc(S.history[0].eur)}</p><p class="small dim">Die Saisonbilanz steht im Büro.</p></div></div>`:''}${blocks}<div class="row"><button class="btn pri big" data-act="sumClose">Weiter zum Büro ▸</button></div></div>`;
+  ov.innerHTML=`<div class="ov-in"><div class="tk-sticky"><div class="tk-head"><div><div class="lbl">Ergebnisse</div><h1>${seasonDone?'Saison beendet':TK.rounds.mid?'Englische Woche':'Woche abgeschlossen'}</h1></div></div><div class="row"><button class="btn pri big" data-act="sumClose">Weiter zum Büro ▸</button></div></div>${seasonDone?`<div class="panel"><h2>Saison ${esc(S.history[0].y)}</h2><div class="bd"><p>Meister: <b class="hi">${esc(S.history[0].m1)}</b> · Pokal: ${esc(S.history[0].pok)} · Europapokal: ${esc(S.history[0].eur)}</p><p class="small dim">Die Saisonbilanz steht im Büro.</p></div></div>`:''}${blocks}</div>`;
 }
 function showHandover(){
   const h=cur();const ov=$('#ov');ov.hidden=false;lockScroll();
