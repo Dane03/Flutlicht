@@ -119,7 +119,7 @@ tr.zone-down td:first-child{box-shadow:inset 4px 0 var(--bad)}
 .fx.me{border-color:var(--hi)}
 .fx .w{font-weight:700}
 .empty{color:var(--dim);font-style:italic}
-.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(80px + env(safe-area-inset-bottom,0px));background:var(--hi);color:var(--ink);padding:9px 16px;font-weight:600;z-index:90;max-width:calc(100% - 32px);border:2px solid var(--ink);box-shadow:4px 4px 0 var(--ink)}
+.toast{pointer-events:none;position:fixed;left:50%;transform:translateX(-50%);bottom:calc(80px + env(safe-area-inset-bottom,0px));background:var(--hi);color:var(--ink);padding:9px 16px;font-weight:600;z-index:90;max-width:calc(100% - 32px);border:2px solid var(--ink);box-shadow:4px 4px 0 var(--ink)}
 .modal{position:fixed;inset:0;z-index:80;background:rgba(4,8,32,.72);display:flex;align-items:center;justify-content:center;padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px))}
 .modal .panel{width:min(560px,100%);max-height:100%;overflow:auto;margin:0;box-shadow:8px 8px 0 rgba(0,0,0,.45)}
 .ov{position:fixed;inset:0;z-index:60;background:var(--bg);background-image:repeating-linear-gradient(0deg,rgba(255,255,255,.02) 0 1px,transparent 1px 3px);overflow:auto;padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(24px + env(safe-area-inset-bottom,0px))}
@@ -173,7 +173,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:600;
 .benchp{display:grid;grid-template-columns:1fr auto;gap:2px 8px;text-align:left;background:var(--deep);border:2px solid var(--line);padding:6px 8px;cursor:pointer;color:var(--fg)}
 .benchp .meter{grid-column:1/-1}.benchp.sel{border-color:var(--hi)}.benchp[disabled]{opacity:.45;cursor:not-allowed}
 .help p{max-width:70ch;margin:0 0 8px}
-.pitch.htp{width:min(100%,380px);aspect-ratio:68/84;touch-action:auto}
+.pitch.htp{width:min(100%,380px);aspect-ratio:68/84;touch-action:pan-y}
 .tok.htt{cursor:pointer;width:min(64px,19%);min-width:52px}.tok.htt b{font-size:11px;max-width:100%}.tok.htt span{font-weight:700}.tok.tired{border-color:var(--bad)}.tok.tired.sel{border-color:var(--hi)}
 .htbar{display:flex;flex-direction:column;gap:6px;margin:8px 0;padding:8px;background:var(--deep);border:2px solid var(--hi)}
 .htrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:5px 0;border-top:1px solid rgba(70,96,207,.35)}
@@ -1449,21 +1449,25 @@ function benchTap(id){const t=curTeam();if(UI.lsel!=null){t.lineup[UI.lsel]=id;U
 let DRAG=null;
 /* Touch: Scrollen bleibt frei; Ziehen erst nach kurzem Gedrückthalten (Long-Press). Maus: sofort ziehen. */
 function lineupPointer(){
-  const start=(tok,x,y,touch)=>{const pitch=document.getElementById('pitch');if(!pitch)return;
-    DRAG={i:+tok.dataset.tok,el:tok,x0:x,y0:y,t0:Date.now(),moved:false,drag:!touch,rect:pitch.getBoundingClientRect(),touch};
+  const start=(tok,x,y,touch)=>{const pitch=tok.closest('.pitch');if(!pitch)return;
+    DRAG={kind:tok.dataset.htok!=null?'ht':'lu',i:+tok.dataset.tok,el:tok,x0:x,y0:y,t0:Date.now(),moved:false,drag:!touch,rect:pitch.getBoundingClientRect(),touch};
     if(touch)DRAG.timer=setTimeout(()=>{if(DRAG&&!DRAG.moved){DRAG.drag=true;DRAG.rect=pitch.getBoundingClientRect();tok.classList.add('lift')}},230)};
   const move=(x,y,ev)=>{if(!DRAG)return;const dx=x-DRAG.x0,dy=y-DRAG.y0;
     if(!DRAG.drag){if(Math.hypot(dx,dy)>8){DRAG.moved=true;clearTimeout(DRAG.timer);if(DRAG.touch)DRAG=null;else DRAG.drag=true}if(!DRAG||!DRAG.drag)return}
     if(ev&&ev.cancelable)ev.preventDefault();DRAG.moved=true;
     const r=DRAG.rect;const px=clamp((x-r.left)/r.width*100,5,95),py=clamp((y-r.top)/r.height*100,5,96);DRAG.el.style.left=px+'%';DRAG.el.style.top=py+'%';DRAG.px=px;DRAG.py=py};
-  const end=()=>{if(!DRAG)return;const d=DRAG;DRAG=null;clearTimeout(d.timer);d.el.classList.remove('lift');const t=curTeam();if(!t)return;
+  const end=()=>{if(!DRAG)return;const d=DRAG;DRAG=null;clearTimeout(d.timer);d.el.classList.remove('lift');
+    if(d.kind==='ht'){const ds=d.el.dataset;if(!TK||!TK.live)return;const m=TK.live.matches[+ds.m],s=+ds.s,id=+ds.id;
+      if(d.drag&&d.px!=null){m.pos=m.pos||[{},{}];m.pos[s][id]={x:Math.round(d.px),y:Math.round(d.py)};m.role[s][id]=slotRole({y:d.py});m.str[s]=null;TK.htSel=null;renderTicker()}
+      else if(!d.moved&&Date.now()-d.t0<450)ACT.htTok(ds);return}
+    const t=curTeam();if(!t)return;
     if(d.drag&&d.px!=null){ensureSlots(t);t.slots[d.i]={x:Math.round(d.px),y:Math.round(d.py)};render()}
     else if(!d.moved&&Date.now()-d.t0<450)lineupTap(d.i)};
-  document.addEventListener('touchstart',e=>{const tok=e.target.closest('[data-tok]');if(!tok||e.touches.length>1)return;const p=e.touches[0];start(tok,p.clientX,p.clientY,true)},{passive:true});
+  document.addEventListener('touchstart',e=>{const tok=e.target.closest('[data-tok],[data-htok]');if(!tok||e.touches.length>1)return;const p=e.touches[0];start(tok,p.clientX,p.clientY,true)},{passive:true});
   document.addEventListener('touchmove',e=>{if(!DRAG)return;const p=e.touches[0];move(p.clientX,p.clientY,e)},{passive:false});
   document.addEventListener('touchend',e=>{if(DRAG){if(DRAG.drag||(!DRAG.moved))e.preventDefault();end()}},{passive:false});
   document.addEventListener('touchcancel',()=>{if(DRAG){clearTimeout(DRAG.timer);DRAG.el.classList.remove('lift');DRAG=null}});
-  document.addEventListener('mousedown',e=>{const tok=e.target.closest('[data-tok]');if(!tok||e.button!==0)return;e.preventDefault();start(tok,e.clientX,e.clientY,false);DRAG.drag=false});
+  document.addEventListener('mousedown',e=>{const tok=e.target.closest('[data-tok],[data-htok]');if(!tok||e.button!==0)return;e.preventDefault();start(tok,e.clientX,e.clientY,false);DRAG.drag=false});
   document.addEventListener('mousemove',e=>{if(DRAG&&!DRAG.touch)move(e.clientX,e.clientY,e)});
   document.addEventListener('mouseup',()=>{if(DRAG&&!DRAG.touch)end()});
 }
@@ -1538,7 +1542,7 @@ function renderTicker(){
   if(r.comp==='LIGA'||r.comp==='NACH'){const a=grp('L1'),b=grp('L2');listHTML=(a?`<div class="lbl">Bundesliga</div><div class="conf">${a}</div>`:'')+(b?`<div class="lbl">2. Bundesliga</div><div class="conf">${b}</div>`:'')}else{const a=grp(r.comp);listHTML=a?`<div class="lbl">Weitere Spiele</div><div class="conf">${a}</div>`:''}
   const sp=S.settings.speed;
   const ctl=r.fin?`<button class="btn pri big" data-act="tkNext">Weiter ▸</button>`:TK.ht?`<button class="btn pri big" data-act="htGo">Weiter ▸</button>`:`<div class="seg">${[['langsam','Langsam'],['normal','Normal'],['schnell','Schnell']].map(([k,l])=>`<button data-act="tkSpeed" data-k="${k}" class="${sp===k?'on':''}">${l}</button>`).join('')}</div><button class="btn" data-act="tkPause">Taktik / Wechsel</button><button class="btn" data-act="tkSkip">Zum Ergebnis</button>`;
-  const keep=ov.scrollTop;ov.innerHTML=`<div class="ov-in"><div class="tk-sticky"><div class="tk-head"><div><div class="lbl">Konferenz · ${yearLabel()}</div><h1>${esc(r.label)}</h1></div><div style="text-align:right"><div class="clock">${clock}</div>${muteBtn()}</div></div>${TK.dec?'':`<div class="row">${ctl}</div>`}</div>${TK.dec?decPanel():''}${TK.scene?'<canvas id="scene" class="stadium" width="160" height="72" style="aspect-ratio:160/72;cursor:pointer" data-act="sceneSkip" aria-label="Torszene"></canvas>':''}${TK.ht?htPanel(hm):''}<div class="grid">${cards}</div>${listHTML}</div>`;ov.scrollTop=(TK.dec||TK.ht)?0:keep;lockScroll();
+  const keep=ov.scrollTop;ov.innerHTML=`<div class="ov-in"><div class="tk-sticky"><div class="tk-head"><div><div class="lbl">Konferenz · ${yearLabel()}</div><h1>${esc(r.label)}</h1></div><div style="text-align:right"><div class="clock">${clock}</div>${muteBtn()}</div></div>${TK.dec?'':`<div class="row">${ctl}</div>`}</div>${TK.dec?decPanel():''}${TK.scene?'<canvas id="scene" class="stadium" width="160" height="72" style="aspect-ratio:160/72;cursor:pointer" data-act="sceneSkip" aria-label="Torszene"></canvas>':''}${TK.ht?htPanel(hm):''}<div class="grid">${cards}</div>${listHTML}</div>`;{const md=TK.dec?'dec':TK.ht?'ht':'run';ov.scrollTop=(md!=='run'&&md!==TK._mode)?0:keep;TK._mode=md}lockScroll();
 }
 function decPanel(){
   const {m}=TK.dec;const d=m.pend||TK.dec;const s=d.s;const t=team(s?m.aid:m.hid);const sc=`${team(m.hid).short} ${m.gh}:${m.ga} ${team(m.aid).short} · ${m.min}. Minute`;
@@ -1564,12 +1568,13 @@ function htPitch(m,mi,s){
   const rl=id=>m.role[s][id]||P(id).pos;const sel=TK.htSel&&TK.htSel.mi===mi&&TK.htSel.s===s?TK.htSel.id:null;
   const rows={ST:18,MF:44,AB:70,TW:90};const by={TW:[],AB:[],MF:[],ST:[]};for(const id of m.on[s])by[rl(id)].push(id);
   let toks='';
-  for(const r of POS){const ids=by[r];ids.forEach((id,i)=>{const p=P(id);const x=Math.round(100*(i+1)/(ids.length+1));const f=Math.round(p.fit);const off=r!==p.pos;
-    toks+=`<button class="tok htt${sel===id?' sel':''}${f<50?' tired':''}${off?' off':''}" style="left:${x}%;top:${rows[r]+(ids.length>=4?(i%2?5:-5):0)}%" data-act="htTok" data-m="${mi}" data-s="${s}" data-id="${id}" aria-label="${esc(p.n)}, ${POSN[r]}, Kraft ${f} Prozent"><i class="pos ${p.pos}">${p.pos}</i><b>${esc(p.n.split(' ').slice(-1)[0])}</b><span style="color:${fitCol(f)}">${f} %${off?' · '+r:''}</span><em style="width:${f}%;background:${fitCol(f)}"></em></button>`})}
+  const cp=(m.pos&&m.pos[s])||{};
+  for(const r of POS){const ids=by[r];ids.forEach((id,i)=>{const p=P(id);const q=cp[id];const x=q?q.x:Math.round(100*(i+1)/(ids.length+1));const y=q?q.y:rows[r]+(ids.length>=4?(i%2?5:-5):0);const f=Math.round(p.fit);const off=r!==p.pos;
+    toks+=`<button class="tok htt${sel===id?' sel':''}${f<50?' tired':''}${off?' off':''}" style="left:${x}%;top:${y}%" data-htok="1" data-m="${mi}" data-s="${s}" data-id="${id}" aria-label="${esc(p.n)}, ${POSN[r]}, Kraft ${f} Prozent"><i class="pos ${p.pos}">${p.pos}</i><b>${esc(p.n.split(' ').slice(-1)[0])}</b><span style="color:${fitCol(f)}">${f} %${off?' · '+r:''}</span><em style="width:${f}%;background:${fitCol(f)}"></em></button>`})}
   const bn=benchOf(m,s).map(P).sort((a,b)=>POS.indexOf(a.pos)-POS.indexOf(b.pos)||b.str-a.str);const sp=sel?P(sel):null;
   const bar=sp?`<div class="htbar"><span><b>${esc(sp.n)}</b> · ${POSN[rl(sel)]} · Kraft <b style="color:${fitCol(sp.fit)}">${Math.round(sp.fit)} %</b></span><div class="seg">${POS.map(r=>`<button data-act="htPos" data-v="${r}" class="${rl(sel)===r?'on':''}">${r}</button>`).join('')}</div><span class="small dim">${m.used[s]<3?'Bankspieler antippen zum Einwechseln, oder zweiten Spieler auf dem Platz antippen zum Tauschen.':'Keine Wechsel mehr übrig. Zweiten Spieler antippen zum Tauschen.'}</span></div>`
-    :`<p class="small dim" style="margin:6px 0">Spieler antippen, um Position zu ändern, zu tauschen oder auszuwechseln. Rot: Kraft unter 50 %.</p>`;
-  return `<div class="pitch htp"><div class="pl half"></div><div class="pl circ"></div><div class="pl box1"></div><div class="pl box2"></div>${toks}</div>${bar}
+    :`<p class="small dim" style="margin:6px 0">Spieler gedrückt halten und ziehen, um ihn zu verschieben, zum Beispiel nach einer Roten Karte. Die Zone bestimmt die Position. Antippen, um zu tauschen oder auszuwechseln. Rot: Kraft unter 50 %.</p>`;
+  return `<div class="pitch htp"><div class="pl half"></div><div class="pl circ"></div><div class="pl box1"></div><div class="pl box2"></div><div class="zone z1">Sturm</div><div class="zone z2">Mittelfeld</div><div class="zone z3">Abwehr</div>${toks}</div>${bar}
    <div class="lbl" style="margin-top:8px">Bank · Wechsel ${m.used[s]}/3</div>
    <div class="fxl">${bn.length?bn.map(p=>`<button class="benchp" data-act="htBench" data-m="${mi}" data-s="${s}" data-id="${p.id}"${m.used[s]>=3?' disabled':''}><span>${posChip(p)} ${esc(p.n)}</span><span class="small">${p.str} · Kraft ${Math.round(p.fit)} %</span>${meter(p.fit)}</button>`).join(''):'<p class="small dim">Keine Spieler auf der Bank.</p>'}</div>`;
 }
@@ -1846,14 +1851,14 @@ const ACT={
     else if(p&&p.k==='red'){m.pend=null;if(v==='redDef'){const out=m.on[p.s].map(P).filter(x=>(m.role[p.s][x.id]||x.pos)==='ST').sort((a,b)=>a.fit-b.fit)[0]||m.on[p.s].map(P).filter(x=>(m.role[p.s][x.id]||x.pos)==='MF').sort((a,b)=>a.fit-b.fit)[0];const inn=benchOf(m,p.s).map(P).filter(x=>x.pos==='AB').sort((a,b)=>effStr(b)-effStr(a))[0];if(out&&inn){subst(m,p.s,out.id,inn.id);m.role[p.s][inn.id]='AB'}}}
     else if(dc.k==='push'||dc.k==='bus'){if(v!=='stay'){m.style[dc.s]=v;m.str[dc.s]=null;addEv(m,dc.s,'info',null,{txt:v==='allin'?`${team(dc.s?m.aid:m.hid).short} wirft alles nach vorne`:`${team(dc.s?m.aid:m.hid).short} zieht sich zurück und mauert`})}}
     TK.dec=null;renderTicker();startTimer()},
-  htForm:d=>{const m=TK.live.matches[+d.m],s=+d.s;applyFormation(m,s,d.f);addEv(m,s,'info',null,{txt:`${team(s?m.aid:m.hid).short} stellt auf ${d.f} um`});renderTicker()},
+  htForm:d=>{const m=TK.live.matches[+d.m],s=+d.s;applyFormation(m,s,d.f);if(m.pos)m.pos[s]={};addEv(m,s,'info',null,{txt:`${team(s?m.aid:m.hid).short} stellt auf ${d.f} um`});renderTicker()},
   htHart:d=>{const m=TK.live.matches[+d.m];m.hart[+d.s]=d.v==='1';m.str[+d.s]=null;renderTicker()},
   htTok:d=>{const sel=TK.htSel,mi=+d.m,s=+d.s,id=+d.id;const m=TK.live.matches[mi];
-    if(sel&&sel.mi===mi&&sel.s===s&&sel.id!==id){const r=m.role[s];const a=r[sel.id]||P(sel.id).pos,b=r[id]||P(id).pos;r[sel.id]=b;r[id]=a;m.str[s]=null;TK.htSel=null}
+    if(sel&&sel.mi===mi&&sel.s===s&&sel.id!==id){const r=m.role[s];const a=r[sel.id]||P(sel.id).pos,b=r[id]||P(id).pos;r[sel.id]=b;r[id]=a;if(m.pos){const q=m.pos[s];const t1=q[sel.id],t2=q[id];if(t2)q[sel.id]=t2;else delete q[sel.id];if(t1)q[id]=t1;else delete q[id]}m.str[s]=null;TK.htSel=null}
     else TK.htSel=sel&&sel.id===id?null:{mi,s,id};renderTicker()},
-  htPos:d=>{const sel=TK.htSel;if(!sel)return;const m=TK.live.matches[sel.mi];m.role[sel.s][sel.id]=d.v;m.str[sel.s]=null;renderTicker()},
+  htPos:d=>{const sel=TK.htSel;if(!sel)return;const m=TK.live.matches[sel.mi];m.role[sel.s][sel.id]=d.v;if(m.pos)delete m.pos[sel.s][sel.id];m.str[sel.s]=null;renderTicker()},
   htBench:d=>{const sel=TK.htSel,mi=+d.m,s=+d.s;if(!sel||sel.mi!==mi||sel.s!==s)return toast('Erst den Spieler auf dem Platz antippen, der raus soll.');const m=TK.live.matches[mi];
-    if(!subst(m,s,sel.id,+d.id))return toast('Wechsel nicht möglich.');TK.htSel=null;renderTicker()},
+    if(!subst(m,s,sel.id,+d.id))return toast('Wechsel nicht möglich.');if(m.pos&&m.pos[s][sel.id]){m.pos[s][+d.id]=m.pos[s][sel.id];delete m.pos[s][sel.id]}TK.htSel=null;renderTicker()},
   htGo:()=>{TK.htSel=null;TK.ht=false;TK.scene=null;sndWhistle([.7]);renderTicker();startTimer()},
   mute:()=>{sndInit();const any=SND.on.music||SND.on.sfx;SND.on.music=SND.on.sfx=!any;sndSave();sndApplyMode();render();if(TK&&TK.live)renderTicker()},
   sndSet:d=>{sndInit();SND.on[d.k]=d.v==='1';sndSave();sndApplyMode();render()},
